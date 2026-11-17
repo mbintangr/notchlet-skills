@@ -1,0 +1,52 @@
+---
+name: notchlet-platform
+description: Use when discovering the Notchlet platform, resolving products and backlog items, or understanding available MCP operations and limitations before planning, implementing, or delivering work.
+---
+
+# Notchlet Platform Discovery
+
+Use this skill first to understand what is available on the connected Notchlet platform before planning, implementing, or delivering work.
+
+## Discover the platform
+
+1. Read available MCP operations and limitations from the connected `notchlet_*` host. Discover live tool names and schemas; never fabricate tool calls.
+2. Use `notchlet_workspace_context` to list accessible organizations, teams, and products.
+3. Use `notchlet_workspace_search` to search products, documents, backlog items, and tickets by query.
+4. Resolve a product by ID or name before creating or refining backlog items under it.
+
+## Resolve backlog items
+
+1. Resolve a backlog item by numeric ID, or search its title/key and fetch it with `notchlet_backlog_get`.
+2. If keys are duplicated, distinguish by title, product, parent, and numeric ID. Ask only if still ambiguous.
+3. Read the item's description, acceptance criteria, children, assignments, and linked documents before acting.
+4. Use `backlog_development_context` (`itemId`; optional `section`, `cursor`, `knownFingerprint`, `limit`) for bounded item/ancestor/child/comment/document/repository/Git context. Its response is capped at 32 KiB serialized bytes and may include truncation metadata and scoped cursors; expand only what is needed, follow cursors with the same limit, and do not assume a truncated page is complete.
+
+## Conflict detection
+
+- Before editing a description, read the latest version and note its `descriptionRevision`.
+- If another agent or user has modified the item since you last read it, reconcile conflicts before writing: reread, merge changes, and pass the latest `expectedDescriptionRevision`.
+- Never overwrite another user's edits without reconciling first.
+
+## Comments and activities
+
+1. Use `backlog_comments_list` / `backlog_comment_add` to read or record checkpoint comments on a backlog item.
+2. Use `backlog_activities_list` to read the activity history for a backlog item.
+
+## Offline / degraded mode
+
+If the Notchlet MCP host (`pg.mbintangr.com`) is unreachable:
+
+- Continue repository work that does not depend on missing requirements (coding, testing, local verification).
+- Do not claim remote updates succeeded.
+- Record your intended changes locally so they can be synced when the platform returns.
+- Report the synchronization blocker; do not silently proceed with status changes that cannot be verified on the platform.
+
+## When to use
+
+- Before any planning, implementation, or delivery: resolve the product and item first.
+- When you need to understand what MCP tools are available on the connected Notchlet host.
+- When you need to search across products, documents, backlog items, or tickets.
+- When you need bounded context for one backlog item without dumping the full backlog.
+- When you suspect a conflict on an item's description or status.
+
+This skill is the entry point to Notchlet-driven development; `notchlet-plan`, `notchlet-implement`, `notchlet-review`, and `notchlet-deliver` assume the platform and item have already been resolved.
