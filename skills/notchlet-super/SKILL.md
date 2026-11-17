@@ -11,6 +11,7 @@ Use this skill when you want to take work from idea to live using Notchlet-drive
 
 | Phase | Skill | Agent Action | Your Authorization |
 |-------|-------|--------------|-------------------|
+| 0. Init | `notchlet-init` | Generate AGENTS.md and PROMPT.md context files | Confirm workspace setup |
 | 1. Setup | `notchlet-mcp` | Configure `opencode.jsonc`, verify MCP connection | Confirm MCP is reachable |
 | 2. Discover | `notchlet-platform` | Resolve product + backlog item, read context | Confirm correct item |
 | 3. Plan | `notchlet-plan` | Break into tasks, Definition of Ready | Confirm plan is correct |
@@ -20,14 +21,28 @@ Use this skill when you want to take work from idea to live using Notchlet-drive
 
 The agent will:
 
-1. **Check MCP** — verify `opencode.jsonc` is connected to `https://pg.mbintangr.com/mcp`.
-2. **Discover** — resolve the product and backlog item you want to work on.
-3. **Plan** — break the work into tasks with a Definition of Ready.
-4. **Implement** — write code, run checks, commit (but not push/PR without your authorization).
-5. **Review** — review the PR/MR against acceptance criteria (approve or request changes).
-6. **Deliver** — record evidence, merge, set status to `DONE`, monitor.
+1. **Init** — generate AGENTS.md and PROMPT.md context files (via `notchlet-init`).
+2. **Setup** — configure `opencode.jsonc` MCP remote and verify `https://pg.mbintangr.com/mcp` is reachable (via `notchlet-mcp`).
+3. **Discover** — resolve the product and backlog item you want to work on.
+4. **Plan** — break the work into tasks with a Definition of Ready.
+5. **Implement** — write code, run checks, commit (but not push/PR without your authorization).
+6. **Review** — review the PR/MR against acceptance criteria (approve or request changes).
+7. **Deliver** — record evidence, merge, set status to `DONE`, monitor.
 
 At every phase boundary, the agent pauses and asks you to confirm before continuing. You can stop at any point.
+
+---
+
+## Phase 0: Init (`notchlet-init`)
+
+**Agent asks:** *"Shall I initialize this workspace for Notchlet-driven development — generate AGENTS.md and PROMPT.md context files?"*
+
+If not already present, the agent creates:
+
+- **AGENTS.md** — agent operating instructions (project overview, commands, conventions, testing, Notchlet workflow)
+- **PROMPT.md** — project context (tech stack, project structure, key files, conventions)
+
+**Proceed when:** Context files are created (or already present and confirmed). MCP setup is handled in Phase 1.
 
 ---
 
@@ -161,6 +176,7 @@ The agent:
 ## Entry Criteria (Before Starting)
 
 - [ ] You have an OpenCode installation with Notchlet skills available.
+- [ ] Workspace is initialized via `notchlet-init` (AGENTS.md, PROMPT.md).
 - [ ] You have a Notchlet MCP bearer token for `https://pg.mbintangr.com/mcp`.
 - [ ] You know which backlog item you want to work on (or are ready to search for one).
 
@@ -229,6 +245,7 @@ Agent: [Runs Definition of Done, adds evidence comment, sets DONE]
 
 ## Skills Orchestrated
 
+- `notchlet-init` — workspace bootstrap: context files + MCP config
 - `notchlet-mcp` — setup and connection
 - `notchlet-platform` — discovery and item resolution
 - `notchlet-plan` — task decomposition and Definition of Ready

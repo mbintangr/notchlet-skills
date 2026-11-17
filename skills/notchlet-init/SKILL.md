@@ -1,0 +1,239 @@
+---
+name: notchlet-init
+description: Use when initializing a workspace for optimal Notchlet-driven development. Generates AGENTS.md and PROMPT.md context files deeply tuned to the Notchlet platform workflow, MCP tool usage, safety rules, and anti-patterns so the agent performs the full cycle (init → setup → discover → plan → implement → review → deliver) with maximum effectiveness.
+---
+
+# Notchlet Init — Optimal Agent Context Bootstrap
+
+Use this skill to initialize a workspace so the agentic AI performs Notchlet-driven development at peak effectiveness. It generates AGENTS.md and PROMPT.md files deeply tuned to the Notchlet platform, including MCP tool schemas, phase-by-phase workflows, safety rules, anti-patterns, and decision gates.
+
+## When to Use
+
+- Starting Notchlet-driven development in any repository
+- The agent needs to perform the full Notchlet cycle optimally (init → setup → discover → plan → implement → review → deliver)
+- Existing context files are missing, outdated, or not tuned for Notchlet
+- You want the agent to know exactly which MCP tools to call, when, and with what arguments
+
+## What It Does
+
+1. **Scans the workspace** — detects project type, existing context files, and repository structure.
+2. **Generates AGENTS.md** — agent operating instructions optimized for Notchlet: MCP tool inventory, phase workflows, safety rules, anti-patterns, and decision gates.
+3. **Generates PROMPT.md** — project context: Notchlet product/backlog resolution guidance, tech stack, conventions, and context file inventory.
+4. **Reports readiness** — summarizes what was created and the recommended next step (`notchlet-super` or individual skills).
+
+## Files Created
+
+| File | Action | Purpose |
+|------|--------|---------|
+| `AGENTS.md` | create | Agent operating instructions tuned for Notchlet-driven development |
+| `PROMPT.md` | create | Project context with Notchlet resolution guidance |
+
+## AGENTS.md Template (Notchlet-Optimized)
+
+```markdown
+# Agent Instructions — Notchlet-Driven Development
+
+## Core Principle
+Notchlet is the **source of product requirements and work status**. The repository is the **source of implementation truth**. Never treat a ticket status or backlog description as a substitute for actual code changes, and never treat code changes as a substitute for updating Notchlet status.
+
+## The Notchlet Development Cycle (Always Follow This Order)
+
+| Phase | Skill | Purpose | Agent Action | Authorization Required |
+|-------|-------|---------|--------------|----------------------|
+| 0. Init | `notchlet-init` | Workspace context | Generate AGENTS.md, PROMPT.md | Confirm before writing files |
+| 1. Setup | `notchlet-mcp` | MCP connectivity | Configure opencode.jsonc, verify `https://pg.mbintangr.com/mcp` | Confirm before editing config |
+| 2. Discover | `notchlet-platform` | Product + item resolution | `notchlet_workspace_context`, `notchlet_workspace_search`, `notchlet_backlog_get`, `backlog_development_context` | Confirm correct item before proceeding |
+| 3. Plan | `notchlet-plan` | Task decomposition | `notchlet_backlog_create`, `notchlet_backlog_update` with Definition of Ready | Confirm plan before implementing |
+| 4. Implement | `notchlet-implement` | Code changes | Write code, run checks, commit locally | Authorize before push/PR |
+| 5. Review | `notchlet-review` | Quality gate | Review PR/MR against acceptance criteria | Approve or request changes |
+| 6. Deliver | `notchlet-deliver` | Evidence + status | `backlog_comment_add`, status update to `DONE`, sync Git issues | Confirm before marking DONE |
+
+## MCP Tool Inventory (Use These, Never Fabricate)
+
+### Workspace Context
+- `notchlet_workspace_context` — list accessible organizations, teams, products
+- `notchlet_workspace_search` — search products, documents, backlog items, tickets by query
+
+### Backlog Items
+- `notchlet_backlog_get` — fetch one backlog item by ID (always read before acting)
+- `notchlet_backlog_create` — create epic/story/task/subtask (capture returned numeric ID for parentId)
+- `notchlet_backlog_update` — update title/description/status/priority/storyPoints (use expectedDescriptionRevision on description edits)
+- `notchlet_backlog_update_status` — change status (TODO, IN_PROGRESS, IN_REVIEW, DONE)
+
+### Development Context
+- `backlog_development_context` — bounded context for one item (itemId; optional section: item|ancestors|children|comments|document|repositories; cursor; limit; knownFingerprint). Response capped at 32 KiB serialized bytes; may include truncation metadata and scoped cursors. Follow cursors with same limit; do not assume a truncated page is complete.
+
+### Comments & Activities
+- `backlog_comments_list` — read comments on a backlog item
+- `backlog_comment_add` — record checkpoint comments (approach, changed files, check outcomes, blockers, next action)
+- `backlog_activities_list` — read activity history for a backlog item
+
+### Git Issues
+- `notchlet_git_issue_create` — create/reconcile GitHub/GitLab issue for a backlog item
+- `notchlet_git_issue_link` — link backlog item to existing issue number or URL
+- `notchlet_git_issue_sync` — synchronize backlog item issue to remote (safe to retry)
+- `notchlet_git_issues_list` — list remote issues connected to a product
+
+### Documents
+- `notchlet_document_generate_brd` / `prd` / `srd` — start document generation (BRD must exist before PRD; PRD before SRD)
+- `notchlet_document_get` — read a document by ID
+- `notchlet_document_list` — list product documents
+- `notchlet_document_save` — create/revise a document draft (never approves or commits)
+
+### Tickets
+- `notchlet_tickets_convert_to_backlog` — convert ticket to backlog item
+- `notchlet_tickets_create` — create a ticket in a product
+- `notchlet_tickets_get` — read a ticket
+- `notchlet_tickets_list` — list tickets in a product
+- `notchlet_tickets_update_status` — update ticket status (OPEN, ON_GOING, RESOLVED, CLOSED)
+
+## Phase-by-Phase Rules
+
+### Phase 0: Init (`notchlet-init`)
+- Generate AGENTS.md and PROMPT.md if missing or outdated.
+- Never overwrite existing context files without explicit user approval.
+- Preserve manually edited sections.
+
+### Phase 1: Setup (`notchlet-mcp`)
+- opencode.jsonc must have `notchlet` MCP remote pointing to `https://pg.mbintangr.com/mcp`.
+- Verify with `curl https://pg.mbintangr.com/mcp`.
+- If MCP is unreachable, continue repository work that does not depend on missing requirements; report the blocker; do not claim remote updates succeeded.
+
+### Phase 2: Discover (`notchlet-platform`)
+- Resolve product via `notchlet_workspace_context` or `notchlet_workspace_search`. Never assume product from previous conversation.
+- Resolve backlog item by numeric ID via `notchlet_backlog_get`. If keys are duplicated, distinguish by title, product, parent, and numeric ID. Ask user only if still ambiguous.
+- Read item description, acceptance criteria, children, assignments, linked documents before acting.
+- Use `backlog_development_context` for bounded context. Read specific sections only; do not dump full backlog.
+- Read linked BRD/PRD/SRD/CUSTOM documents via `notchlet_document_list` + `notchlet_document_get`.
+
+### Phase 3: Plan (`notchlet-plan`)
+- Check for duplicate existing items before creating. Prefer refining existing item when it covers the same work.
+- Create epic → stories → tasks sequentially, capturing each returned numeric ID for `parentId`.
+- Apply Definition of Ready before implementation:
+  - Acceptance criteria are measurable (given/when/then or equivalent)
+  - Dependencies listed with existing item titles and numeric IDs, or marked "none"
+  - Scope is specific (capability, route, or component named)
+  - Verification criteria defined (what test/evidence proves completion)
+  - No unresolved blocking dependency remains
+- Use description template: Outcome / Scope / Acceptance criteria / Dependencies / Verification
+- Keep planning lightweight for small changes; no OpenSpec artifact, proposal/design/spec hierarchy, or new change-management system required.
+
+### Phase 4: Implement (`notchlet-implement`)
+- Item must have Definition of Ready met and be in TODO or IN_PROGRESS status.
+- Set item to IN_PROGRESS when implementation starts.
+- Create feature branch; do not commit directly to main/develop unless authorized.
+- Implement complete behavior including authorization, validation, failure handling, caller integration.
+- Run focused checks: lint, type-check (`tsc --noEmit` or equivalent), unit tests, integration tests if touching database/MCP/external.
+- Inspect final diff for unintended files and exposed secrets.
+- Add `### Agent checkpoint` comment on backlog item with approach, changed files, exact check outcomes, actual branch/commit, blockers, next action.
+- Commit locally. Do NOT push, create PR, or deploy without explicit user authorization.
+- If Notchlet is unavailable, continue repository work; report blocker; do not claim remote updates succeeded.
+
+### Phase 5: Review (`notchlet-review`)
+- Implementation complete and committed on feature branch.
+- PR/MR open against target branch.
+- Review checklist:
+  - Every acceptance criterion addressed
+  - No scope creep
+  - Edge cases and failure behavior handled
+  - No exposed secrets or unintended files in diff
+  - Existing abstractions reused; no unnecessary new abstractions
+  - Authorization, validation, caller integration present
+  - Focused checks passed (actual output, not invented)
+  - Pre-existing failures distinguished from change-caused failures
+- Approve: set item to IN_REVIEW, notify delivery can proceed.
+- Request changes: add specific comment on PR/MR and backlog item; return to implement until resolved.
+
+### Phase 6: Deliver (`notchlet-deliver`)
+- Definition of Done:
+  - All acceptance criteria met with actual evidence (test output, diff, command results)
+  - All focused checks pass
+  - Code review approved (or not required per team policy)
+  - PR/MR merged (branch-linked) or implementation committed (issue-only)
+  - No unresolved blockers
+  - Parent not marked DONE while required children remain open
+- Record `### Development evidence` comment with scope, changed components, verification, acceptance criteria met, Git evidence, blockers, resulting status.
+- Update item status to DONE and confirm returned state.
+- Do NOT auto-close linked GitHub issues (RESOLVED ≠ CLOSED).
+- Watch for regressions post-delivery; if regression appears, report and create follow-up fix item via `notchlet-plan`.
+
+## Safety Rules (Non-Negotiable)
+
+- [ ] Never commit, push, create PR, branch, publish, or deploy without explicit user authorization.
+- [ ] Never write secrets, keys, credentials, or personal data into context files, comments, or code.
+- [ ] Never claim an MCP tool succeeded if the call returned an error or MCP is unreachable.
+- [ ] Never overwrite another user's edits without reconciling via `expectedDescriptionRevision`.
+- [ ] Never treat a local commit or closed-unmerged PR as proof of feature completion; merge verification required for branch-linked work.
+- [ ] Never mark parent DONE while required children remain open.
+- [ ] Never invent results, test output, or check outcomes.
+- [ ] Never treat `RESOLVED` ticket status as `CLOSED`.
+
+## Anti-Patterns to Avoid
+
+- ❌ Updating backlog status without implementing the behavior
+- ❌ Implementing without reading acceptance criteria first
+- ❌ Creating duplicate backlog items instead of refining existing ones
+- ❌ Skipping Definition of Ready before implementation
+- ❌ Pushing/PR-ing without user authorization
+- ❌ Marking DONE without review approval
+- ❌ Fabricating MCP tool calls or tool schemas
+- ❌ Dumping the full product backlog instead of targeted reads
+- ❌ Treating stored Git metadata as live verification
+- ❌ Replacing user-authored requirements with progress logs in descriptions
+
+## When Notchlet MCP Is Unavailable
+
+- Continue repository work that does not depend on missing requirements (coding, testing, local verification).
+- Record intended changes locally so they can be synced when platform returns.
+- Report the synchronization blocker explicitly.
+- Do not claim remote updates succeeded.
+- Do not silently proceed with status changes that cannot be verified on the platform.
+
+## When to Use Each Skill
+
+- `notchlet-init` — workspace context setup (this file)
+- `notchlet-mcp` — configure/verify MCP connection
+- `notchlet-platform` — discover products, resolve backlog items
+- `notchlet-plan` — create/refine epics, stories, tasks with Definition of Ready
+- `notchlet-implement` — implement backlog items/tickets
+- `notchlet-review` — review PR/MR against acceptance criteria
+- `notchlet-deliver` — record evidence, update status, sync issues
+- `notchlet-super` — orchestrate the full cycle with authorization gates
+
+## Example Conversation Flow
+
+```
+You: "Use notchlet-super to implement story APP-42 from idea to live."
+
+Agent: [Phase 0 Init] Workspace context already present. Proceeding to setup.
+Agent: [Phase 1 Setup] Verifying MCP connection at https://pg.mbintangr.com/mcp...
+✓ MCP connection verified.
+
+Agent: [Phase 2 Discover] Resolving story APP-42...
+Found: "Add Slack notification toggle" — status TODO
+Acceptance criteria: user can enable/disable, default disabled, persisted, audit recorded.
+
+Agent: Shall I break this into tasks and verify Definition of Ready? (y/n)
+You: yes
+
+Agent: [Phase 3 Plan] Created 4 tasks. Definition of Ready met.
+✓ Plan complete. Tasks: T1 migration, T2 endpoint, T3 tests, T4 frontend.
+
+Agent: Shall I start implementation? I'll write code and run checks, but won't push/PR without your authorization. (y/n)
+You: yes
+
+Agent: [Phase 4 Implement] Sets IN_PROGRESS, creates branch, implements, runs tests, commits.
+✓ Implementation complete. Commit a1b2c3d on feature/slack-toggle.
+
+Agent: Implementation done and checks pass. Shall I push and create a PR? (y/n)
+You: yes
+
+Agent: [Phase 5 Review] Runs review checklist against acceptance criteria.
+✓ Review approved. All criteria met.
+
+Agent: PR is merged and review approved. Shall I finalize delivery — record evidence and set APP-42 to DONE? (y/n)
+You: yes
+
+Agent: [Phase 6 Deliver] Runs Definition of Done, adds evidence comment, sets DONE.
+✓ APP-42 is DONE. Evidence recorded. Slack notification toggle is live.
+```

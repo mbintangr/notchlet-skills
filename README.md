@@ -10,7 +10,8 @@ npx skills add mbintangr/notchlet-skills
 
 | Skill | Purpose |
 |-------|---------|
-| `notchlet-super` | **Meta-skill** — orchestrates the full cycle: setup → discover → plan → implement → review → deliver. Asks for your authorization at each gate. |
+| `notchlet-init` | Generate AGENTS.md and PROMPT.md workspace context files |
+| `notchlet-super` | **Meta-skill** — orchestrates the full cycle: init → setup → discover → plan → implement → review → deliver. Asks for your authorization at each gate. |
 | `notchlet-mcp` | Configure opencode.jsonc and verify connection to the remote Notchlet MCP backend |
 | `notchlet-platform` | Discover products, resolve backlog items, understand available MCP operations |
 | `notchlet-plan` | Create/refine epics, stories, tasks, acceptance criteria, dependencies |
@@ -18,31 +19,33 @@ npx skills add mbintangr/notchlet-skills
 | `notchlet-review` | Review implemented work, approve or request changes before delivery |
 | `notchlet-deliver` | Record evidence and update statuses based on verified completion |
 
-Start with `notchlet-super` for full-cycle development. It drives all other skills interactively. The individual skills are available if you need a single phase only.
+Start with `notchlet-init` to create workspace context (AGENTS.md, PROMPT.md), then `notchlet-super` for full-cycle development. The individual skills are available if you need a single phase only.
 
-These seven skills cover the full Notchlet-driven development loop: **setup → discover → plan → implement → review → deliver**.
+These eight skills cover the full Notchlet-driven development loop: **init → setup → discover → plan → implement → review → deliver**.
 
 ```text
-┌─────────┐    ┌──────────┐    ┌─────────┐    ┌──────────┐    ┌─────────┐    ┌─────────┐
-│  MCP    │───▶│ Platform │───▶│  Plan   │───▶│ Implement│───▶│ Review  │───▶│ Deliver │
-│  Setup  │    │ Discover │    │  Ready  │    │   Code   │    │   Gate  │    │  Status │
-└─────────┘    └──────────┘    └─────────┘    └──────────┘    └─────────┘    └─────────┘
-       ▲                                                                            │
-       └────────────────────────────────────────────────────────────────────────────┘
-                              (post-delivery monitoring & rollback)
+┌─────────┐    ┌──────────┐    ┌─────────┐    ┌──────────┐    ┌─────────┐    ┌─────────┐    ┌─────────┐
+│   Init  │───▶│  MCP     │───▶│ Platform│───▶│  Plan    │───▶│ Implement│───▶│ Review  │───▶│ Deliver │
+│Context  │    │  Setup   │    │ Discover│    │  Ready   │    │   Code   │    │  Gate   │    │  Status │
+└─────────┘    └──────────┘    └─────────┘    └──────────┘    └─────────┘    └─────────┘    └─────────┘
+       ▲                                                                                               │
+       └───────────────────────────────────────────────────────────────────────────────────────────────┘
+                                                  (post-delivery monitoring & rollback)
 ```
 
 Each skill is a directory under `skills/` containing a `SKILL.md` file with YAML frontmatter (`name`, `description`), following the [skills.sh skill format](https://github.com/vercel-labs/skills/blob/main/docs/creating-skills.md).
 
 ## Quick Start
 
-### Recommended: Full cycle with notchlet-super
+### Recommended: Full cycle with notchlet-init → notchlet-super
+
+First, initialize the workspace:
 
 ```bash
-npx skills add mbintangr/notchlet-skills --skill notchlet-super -a opencode
+npx skills add mbintangr/notchlet-skills --skill notchlet-init -a opencode
 ```
 
-Then tell the agent: *"Use notchlet-super to implement story APP-42 from idea to live."* The agent will walk you through setup, discovery, planning, implementation, review, and delivery — asking for authorization at each gate.
+Then tell the agent: *"Use notchlet-super to implement story APP-42 from idea to live."* The agent will walk you through init, setup, discovery, planning, implementation, review, and delivery — asking for authorization at each gate.
 
 ### Install a single skill
 
@@ -66,8 +69,12 @@ npx skills use mbintangr/notchlet-skills@notchlet-super --agent opencode
 
 ```
 notchlet-skills/
+├── AGENTS.md         # Agent operating instructions
+├── PROMPT.md         # Project context
 ├── README.md         # This file
 └── skills/
+    ├── notchlet-init/
+    │   └── SKILL.md    # Workspace bootstrap: context files + MCP config
     ├── notchlet-mcp/
     │   └── SKILL.md
     ├── notchlet-platform/
