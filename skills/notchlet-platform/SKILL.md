@@ -21,6 +21,28 @@ Use this skill first to understand what is available on the connected Notchlet p
 3. Read the item's description, acceptance criteria, children, assignments, and linked documents before acting.
 4. Use `backlog_development_context` (`itemId`; optional `section`, `cursor`, `knownFingerprint`, `limit`) for bounded item/ancestor/child/comment/document/repository/Git context. Its response is capped at 32 KiB serialized bytes and may include truncation metadata and scoped cursors; expand only what is needed, follow cursors with the same limit, and do not assume a truncated page is complete.
 
+### Example MCP tool invocations
+
+```json
+// Resolve workspace context to find products
+{
+  "tool": "notchlet_workspace_context"
+}
+
+// Fetch a backlog item by ID
+{
+  "tool": "notchlet_backlog_get",
+  "arguments": { "id": 42 }
+}
+
+// Get bounded development context for an item
+{
+  "tool": "backlog_development_context",
+  "arguments": { "itemId": 42, "limit": 10 }
+}
+```
+
+
 ## Conflict detection
 
 - Before editing a description, read the latest version and note its `descriptionRevision`.
@@ -48,5 +70,16 @@ If the Notchlet MCP host (`pg.mbintangr.com`) is unreachable:
 - When you need to search across products, documents, backlog items, or tickets.
 - When you need bounded context for one backlog item without dumping the full backlog.
 - When you suspect a conflict on an item's description or status.
+
+## When NOT to use
+
+- When the product and backlog item are already resolved and you only need to plan, implement, or deliver — use the individual skill instead.
+- When you need to configure the MCP connection itself — use `notchlet-mcp` first.
+
+## Related skills
+
+- `notchlet-mcp` — configure MCP connection before using platform tools
+- `notchlet-plan` — plan tasks after resolving the backlog item
+- `notchlet-super` — orchestrates the full cycle including platform discovery
 
 This skill is the entry point to Notchlet-driven development; `notchlet-plan`, `notchlet-implement`, `notchlet-review`, and `notchlet-deliver` assume the platform and item have already been resolved.

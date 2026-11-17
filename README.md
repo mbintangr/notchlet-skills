@@ -22,6 +22,16 @@ Start with `notchlet-super` for full-cycle development. It drives all other skil
 
 These seven skills cover the full Notchlet-driven development loop: **setup → discover → plan → implement → review → deliver**.
 
+```text
+┌─────────┐    ┌──────────┐    ┌─────────┐    ┌──────────┐    ┌─────────┐    ┌─────────┐
+│  MCP    │───▶│ Platform │───▶│  Plan   │───▶│ Implement│───▶│ Review  │───▶│ Deliver │
+│  Setup  │    │ Discover │    │  Ready  │    │   Code   │    │   Gate  │    │  Status │
+└─────────┘    └──────────┘    └─────────┘    └──────────┘    └─────────┘    └─────────┘
+       ▲                                                                            │
+       └────────────────────────────────────────────────────────────────────────────┘
+                              (post-delivery monitoring & rollback)
+```
+
 Each skill is a directory under `skills/` containing a `SKILL.md` file with YAML frontmatter (`name`, `description`), following the [skills.sh skill format](https://github.com/vercel-labs/skills/blob/main/docs/creating-skills.md).
 
 ## Quick Start

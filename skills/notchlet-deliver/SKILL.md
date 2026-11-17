@@ -78,3 +78,17 @@ Do not publish credentials, personal payloads, or raw production data in reports
 - Final step after `notchlet-implement` and `notchlet-review`.
 - Recording evidence, updating status, and synchronizing Git issues/tickets.
 - When work is ready to be considered complete.
+
+## When NOT to use
+
+- When you only need to plan tasks — use `notchlet-plan` instead.
+- When you only need to implement code — use `notchlet-implement` instead.
+- When you only need to review — use `notchlet-review` instead.
+- When you need to set up the MCP connection first — use `notchlet-mcp` instead.
+
+## Related skills
+
+- `notchlet-implement` — implements work before delivery
+- `notchlet-review` — reviews implementation before delivery
+- `notchlet-platform` — resolves backlog items and reads context for delivery
+- `notchlet-super` — orchestrates the full cycle including delivery

@@ -9,6 +9,15 @@ Use this skill when you want to take work from idea to live using Notchlet-drive
 
 ## How It Works
 
+| Phase | Skill | Agent Action | Your Authorization |
+|-------|-------|--------------|-------------------|
+| 1. Setup | `notchlet-mcp` | Configure `opencode.jsonc`, verify MCP connection | Confirm MCP is reachable |
+| 2. Discover | `notchlet-platform` | Resolve product + backlog item, read context | Confirm correct item |
+| 3. Plan | `notchlet-plan` | Break into tasks, Definition of Ready | Confirm plan is correct |
+| 4. Implement | `notchlet-implement` | Write code, run checks, commit locally | Authorize push/PR |
+| 5. Review | `notchlet-review` | Check PR against acceptance criteria | Approve or request changes |
+| 6. Deliver | `notchlet-deliver` | Record evidence, set `DONE`, monitor | Confirm delivery |
+
 The agent will:
 
 1. **Check MCP** — verify `opencode.jsonc` is connected to `https://pg.mbintangr.com/mcp`.

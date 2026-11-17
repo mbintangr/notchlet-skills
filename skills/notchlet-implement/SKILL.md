@@ -37,7 +37,7 @@ Use Notchlet as the source of product requirements and work status, and the repo
 - Set the selected executable item to `IN_PROGRESS` when implementation starts. Avoid changing unrelated or already completed items.
 - When editing a description, supply the latest `expectedDescriptionRevision` if supported by the live schema. On conflict, reread and reconcile user edits; use comments for checkpoints instead of rewriting requirements with progress logs.
 - Locate existing implementations before creating new abstractions. Check package scripts and surrounding code for commands and patterns.
-- In this repository, the backend is in `product-guy-be` (NestJS/Prisma) and frontend in `product-guy-fe` (Next.js/React). Recheck these facts when used elsewhere.
+- Check your repository structure for backend and frontend locations (for example, `product-guy-be` for NestJS/Prisma and `product-guy-fe` for Next.js/React in this repo). Recheck these facts for your specific repository.
 - Implement the complete requested behavior, including appropriate authorization, validation, failure behavior, and caller integration. Load applicable API/testing skills when required by the session instructions.
 - Use `notchlet-plan` if migration work needs decomposition.
 - Do not commit, push, create a PR, create a branch, publish, deploy, or deactivate workflows unless the user's request authorizes that action. Ticket ownership or a linked issue alone is not authorization.
@@ -73,6 +73,19 @@ Do not invent results or run auto-fixing lint without accounting for its edits.
 - [ ] Code review via `notchlet-review` is approved (or review is not required per team policy).
 - [ ] PR/MR is merged (for branch-linked work) or implementation is committed (for issue-only items).
 - [ ] No unresolved blockers remain.
+
+## When NOT to use
+
+- When you only need to plan tasks — use `notchlet-plan` instead.
+- When you only need to review or deliver completed work — use `notchlet-review` or `notchlet-deliver` instead.
+- When you need to set up the MCP connection first — use `notchlet-mcp` instead.
+
+## Related skills
+
+- `notchlet-plan` — establishes Definition of Ready before implementation
+- `notchlet-review` — reviews implementation before delivery
+- `notchlet-deliver` — finalizes delivery after implementation and review
+- `notchlet-super` — orchestrates the full cycle including implementation
 
 ## When to use
 

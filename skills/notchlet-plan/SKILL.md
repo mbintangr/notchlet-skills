@@ -73,13 +73,25 @@ Description template:
 3. Read the root item after creation and verify child counts, types, product, parent links, descriptions, and estimates. If the hierarchy is truncated, fetch children individually.
 4. Report verified totals and a compact hierarchy. Report service anomalies explicitly; do not claim keys/parents were repaired using unsupported operations.
 
-For existing work, fetch the latest description before editing and preserve its requirements, evidence, and user-authored content. Pass `expectedDescriptionRevision` on description updates when the live schema supports it; reread and reconcile conflicts. Batch generation has an untyped `items` schema in the authoring tools; prefer explicit create operations unless its payload contract is established.
+For existing work, fetch the latest description before editing and preserve its requirements, evidence, and user-authored content. Pass `expectedDescriptionRevision` on description updates when the live schema supports it; reread and reconcile conflicts. Prefer explicit create operations over batch generation unless the batch payload contract is established.
 
 ## Exit criteria
 
 - All planned items have a definition of ready met.
 - Hierarchy (epic → stories → tasks) is verified in Notchlet.
 - Items are in the correct status (typically `TODO` or `IN_PROGRESS` for the first executable item).
+
+## When NOT to use
+
+- When you only need to implement an already-planned item — use `notchlet-implement` instead.
+- When you only need to review or deliver completed work — use `notchlet-review` or `notchlet-deliver` instead.
+- When you need to set up the MCP connection first — use `notchlet-mcp` instead.
+
+## Related skills
+
+- `notchlet-platform` — resolve the product and backlog item before planning
+- `notchlet-implement` — implement tasks after planning establishes Definition of Ready
+- `notchlet-super` — orchestrates the full cycle including planning
 
 ## When to use
 

@@ -54,3 +54,13 @@ Should return an MCP server initialization response.
 
 - Before using any other Notchlet skill for the first time on a new machine or project.
 - When `notchlet_workspace_context` or `backlog_development_context` tools are unavailable.
+
+## When NOT to use
+
+- When `opencode.jsonc` is already configured and `curl https://pg.mbintangr.com/mcp` returns a valid response.
+- When you only need to plan, implement, or deliver — use the individual skill instead.
+
+## Related skills
+
+- `notchlet-platform` — discover products and resolve backlog items (requires MCP connection)
+- `notchlet-super` — orchestrates the full cycle including MCP setup

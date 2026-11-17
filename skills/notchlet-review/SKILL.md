@@ -59,3 +59,10 @@ Review implemented work against acceptance criteria before it is delivered. A ba
 - For initial planning (use `notchlet-plan`).
 - For writing implementation code (use `notchlet-implement`).
 - For final status sync to Notchlet (use `notchlet-deliver`).
+
+## Related skills
+
+- `notchlet-implement` — implements work before review
+- `notchlet-deliver` — finalizes delivery after review approval
+- `notchlet-platform` — resolves backlog items and reads context for review
+- `notchlet-super` — orchestrates the full cycle including review
