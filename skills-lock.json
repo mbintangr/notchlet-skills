@@ -17,17 +17,17 @@
     },
     "notchlet-init": {
       "source": "mbintangr/notchlet-skills",
-      "commit": "580fae3cfcf5f46868b2b795fe4ec9e0f629a707",
+      "commit": "f735e9b",
       "sourceType": "github",
       "skillPath": "skills/notchlet-init/SKILL.md",
-      "computedHash": "19231777a55fd50024cf3bd167dbf06910b1ac844a2b35f503a3f24782567838"
+      "computedHash": "aa3755c259e57f7e69f510b518de3f251654d16f4e7a8c8052537c43d8584279"
     },
     "notchlet-mcp": {
       "source": "mbintangr/notchlet-skills",
-      "commit": "580fae3cfcf5f46868b2b795fe4ec9e0f629a707",
+      "commit": "f735e9b",
       "sourceType": "github",
       "skillPath": "skills/notchlet-mcp/SKILL.md",
-      "computedHash": "2d594adaa874da84ab7ce873ebcfa8a073b61faab9e751559032a3ebf2945a15"
+      "computedHash": "97ca3e77f404609c1ca9f06603b9ce767b37667050531d37c8dd998b461b5d88"
     },
     "notchlet-plan": {
       "source": "mbintangr/notchlet-skills",
@@ -52,10 +52,10 @@
     },
     "notchlet-super": {
       "source": "mbintangr/notchlet-skills",
-      "commit": "580fae3cfcf5f46868b2b795fe4ec9e0f629a707",
+      "commit": "f735e9b",
       "sourceType": "github",
       "skillPath": "skills/notchlet-super/SKILL.md",
-      "computedHash": "5a1e432fd86e6c5e66698aaa7c7daf95530ef7092437f461c94b9d44bed8a865"
+      "computedHash": "c9be5a6e97fabc5ad330f2cc417b591e4fe7d2a061691e69784573d4004f0acf"
     }
   }
 }
