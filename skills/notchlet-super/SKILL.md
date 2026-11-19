@@ -41,7 +41,6 @@ The local Notchlet MCP registry exposes these concrete tool names and arguments;
 The REST API and MCP tools call the same `DevelopmentService`; preserve their expected revisions, operation IDs, payload hashes, scope checks, and error recovery semantics. Do not infer that remote snapshot state represents unsynchronized local edits.
 
 ## Authorization and handoff
-
 - Preserve explicit authorization boundaries. Never push, open/merge a PR, deploy, publish skills, or change remote status merely because a task is complete.
 - Use `notchlet sync status|push|pull --change <id>` for explicit snapshot synchronization. Divergence requires review; use `notchlet sync resolve --change <id> --keep-local` only after reviewing the local artifacts, then retry conditionally.
 - `notchlet checkpoint --change <id> --name <name>` records a synchronized checkpoint; it is not delivery evidence by itself.

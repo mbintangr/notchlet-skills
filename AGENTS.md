@@ -3,12 +3,12 @@
 ## Core Principle
 Notchlet is the **source of product requirements and work status**. The repository is the **source of implementation truth**. Never treat a ticket status or backlog description as a substitute for actual code changes, and never treat code changes as a substitute for updating Notchlet status.
 
-## The Notchlet Development Cycle (Always Follow This Order)
+## The Notchlet Development Cycle (Route From Current State)
 
 | Phase | Skill | Purpose | Agent Action | Authorization Required |
 |-------|-------|---------|--------------|----------------------|
-| 0. Init | `notchlet-init` | Workspace context | Generate AGENTS.md, PROMPT.md | Confirm before writing files |
-| 1. Setup | `notchlet-mcp` | MCP connectivity | Configure opencode.jsonc, verify `https://pg.mbintangr.com/mcp` | Confirm before editing config |
+| 0. Init | `notchlet-init` | Optional workspace context | Generate AGENTS.md/PROMPT.md only when requested | Confirm before writing files |
+| 1. Setup | `notchlet-mcp` | MCP connectivity | Reuse a valid connection; configure only when needed | Confirm before editing config |
 | 2. Discover | `notchlet-platform` | Product + item resolution | `notchlet_workspace_context`, `notchlet_workspace_search`, `notchlet_backlog_get`, `backlog_development_context` | Confirm correct item before proceeding |
 | 3. Plan | `notchlet-plan` | Task decomposition | `notchlet_backlog_create`, `notchlet_backlog_update` with Definition of Ready | Confirm plan before implementing |
 | 4. Implement | `notchlet-implement` | Code changes | Write code, run checks, commit locally | Authorize before push/PR |
@@ -56,14 +56,14 @@ Notchlet is the **source of product requirements and work status**. The reposito
 
 ## Phase-by-Phase Rules
 
-### Phase 0: Init (`notchlet-init`)
-- Generate AGENTS.md and PROMPT.md if missing or outdated.
-- Never overwrite existing context files without explicit user approval.
-- Preserve manually edited sections.
+### Phase 0: Optional Init (`notchlet-init`)
+- Do not generate AGENTS.md or PROMPT.md as an automatic prerequisite for using Notchlet.
+- Only create or revise context files when the user requests workspace context setup.
+- Preview changes, never overwrite existing files without explicit approval, and preserve manually edited sections.
 
 ### Phase 1: Setup (`notchlet-mcp`)
-- opencode.jsonc must have `notchlet` MCP remote pointing to `https://pg.mbintangr.com/mcp`.
-- Verify with `curl https://pg.mbintangr.com/mcp`.
+- Reuse a valid user-managed MCP connection. Do not reconfigure it or ask the user to repeat setup when authenticated tools are already available.
+- Verify with authenticated MCP initialization and `tools/list`, or `notchlet doctor` when the CLI is installed in an initialized workspace. An unauthenticated HTTP `GET /mcp` is not a valid connection test; the service uses Streamable HTTP `POST`.
 - If MCP is unreachable, continue repository work that does not depend on missing requirements; report the blocker; do not claim remote updates succeeded.
 
 ### Phase 2: Discover (`notchlet-platform`)
@@ -158,7 +158,7 @@ Notchlet is the **source of product requirements and work status**. The reposito
 
 ## When to Use Each Skill
 
-- `notchlet-init` — workspace context setup (this file)
+- `notchlet-init` — optional, user-requested context-file setup (this file)
 - `notchlet-mcp` — configure/verify MCP connection
 - `notchlet-platform` — discover products, resolve backlog items
 - `notchlet-plan` — create/refine epics, stories, tasks with Definition of Ready
