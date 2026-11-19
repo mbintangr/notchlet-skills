@@ -1,9 +1,9 @@
 ---
 name: notchlet-super
-description: Use when you want to run the complete Notchlet-driven development cycle end-to-end. This meta-skill actively guides you through setup, discovery, planning, implementation, review, and delivery — asking for your authorization at each gate before proceeding to the next phase.
+description: Route a Notchlet development request from current workspace state; resume existing work without restarting setup or planning.
 ---
 
-# Notchlet Super — Full-Cycle Development Orchestrator
+# Notchlet Super — state-aware router
 
 Use this skill when you want to take work from idea to live using Notchlet-driven development. It orchestrates all six skills (`notchlet-mcp`, `notchlet-platform`, `notchlet-plan`, `notchlet-implement`, `notchlet-review`, `notchlet-deliver`) and drives you through each phase interactively, asking for confirmation before moving forward.
 
@@ -11,7 +11,7 @@ Use this skill when you want to take work from idea to live using Notchlet-drive
 
 | Phase | Skill | Agent Action | Your Authorization |
 |-------|-------|--------------|-------------------|
-| 0. Init | `notchlet-init` | Generate AGENTS.md and PROMPT.md context files | Confirm workspace setup |
+| 0. Init | Init skill | Generate AGENTS.md and PROMPT.md context files | Confirm workspace setup |
 | 1. Setup | `notchlet-mcp` | Configure `opencode.jsonc`, verify MCP connection | Confirm MCP is reachable |
 | 2. Discover | `notchlet-platform` | Resolve product + backlog item, read context | Confirm correct item |
 | 3. Plan | `notchlet-plan` | Break into tasks, Definition of Ready | Confirm plan is correct |
@@ -19,9 +19,15 @@ Use this skill when you want to take work from idea to live using Notchlet-drive
 | 5. Review | `notchlet-review` | Check PR against acceptance criteria | Approve or request changes |
 | 6. Deliver | `notchlet-deliver` | Record evidence, set `DONE`, monitor | Confirm delivery |
 
+## Explore / investigate (read-only)
+
+Inspect the checkout, tests, docs, git state, and relevant bounded MCP context. Do not run `notchlet init`, create/convert a change, edit files, transition tasks, sync, checkpoint, or write backlog state. Exploration works without an initialized `.notchlet` workspace; for local state use `notchlet status` or `notchlet change list` only when useful (both report empty state when no workspace exists).
+
+Plan only (read-only unless asked to persist): use `notchlet-plan` to clarify outcome, scope, assumptions, dependencies, risks, and verification criteria in the conversation. Planning does not require initialization, an epic→story→task hierarchy, or application/change-artifact writes.
+
 The agent will:
 
-1. **Init** — generate AGENTS.md and PROMPT.md context files (via `notchlet-init`).
+1. **Init** — generate AGENTS.md and PROMPT.md context files (via the init skill).
 2. **Setup** — configure `opencode.jsonc` MCP remote and verify `https://pg.mbintangr.com/mcp` is reachable (via `notchlet-mcp`).
 3. **Discover** — resolve the product and backlog item you want to work on.
 4. **Plan** — break the work into tasks with a Definition of Ready.
@@ -33,7 +39,7 @@ At every phase boundary, the agent pauses and asks you to confirm before continu
 
 ---
 
-## Phase 0: Init (`notchlet-init`)
+## Phase 0: Init (init skill)
 
 **Agent asks:** *"Shall I initialize this workspace for Notchlet-driven development — generate AGENTS.md and PROMPT.md context files?"*
 
@@ -65,7 +71,7 @@ If not configured, the agent guides you to edit `opencode.jsonc`:
 }
 ```
 
-Then restart OpenCode and verify with `curl https://pg.mbintangr.com/mcp`.
+Then restart OpenCode and verify the MCP connection is reachable.
 
 **Proceed when:** MCP connection is verified. Otherwise stop here.
 
@@ -80,7 +86,7 @@ The agent:
 - Fetches the item via `notchlet_backlog_get` by ID or searches by title/key.
 - If keys are duplicated, asks you to distinguish by title, product, parent, and numeric ID.
 - Reads the item's description, acceptance criteria, children, and linked documents.
-- Reads bounded context via `backlog_development_context`.
+- Reads bounded context via `backlog_development_context({ itemId, section?, cursor?, knownFingerprint?, limit? })`.
 
 **Agent reports:** The resolved item, its status, acceptance criteria, and any existing children.
 
@@ -110,6 +116,10 @@ The agent:
 
 **Proceed when:** You confirm the plan looks correct and want to start implementation.
 
+Use `notchlet instructions <change> --action plan` to get planning guidance for an existing local change.
+
+To revise an existing local change, use `notchlet instructions <change> --action revise` to get revision guidance.
+
 ---
 
 ## Phase 4: Implement (`notchlet-implement`)
@@ -124,6 +134,8 @@ The agent:
 - Inspects diff for secrets and unintended files.
 - Adds a checkpoint comment on the backlog item.
 - Commits locally.
+
+For an existing local change, use `notchlet instructions <change> --action implement` to get implementation guidance.
 
 **Agent pauses and asks:** *"Implementation is complete and checks pass. Shall I push the branch and create a PR/MR?"*
 
@@ -147,6 +159,8 @@ The agent runs the review checklist:
 **Verdict options:**
 - **Approve:** Sets item to `IN_REVIEW`, notifies you delivery can proceed.
 - **Request changes:** Lists specific fixes needed on the PR/MR and backlog item. Returns to implement phase until resolved.
+
+Use `notchlet instructions <change> --action verify` to get verification guidance for an existing local change.
 
 **Proceed when:** Review is approved (or you waive review per team policy).
 
@@ -176,7 +190,7 @@ The agent:
 ## Entry Criteria (Before Starting)
 
 - [ ] You have an OpenCode installation with Notchlet skills available.
-- [ ] Workspace is initialized via `notchlet-init` (AGENTS.md, PROMPT.md).
+- [ ] Workspace is initialized (AGENTS.md, PROMPT.md).
 - [ ] You have a Notchlet MCP bearer token for `https://pg.mbintangr.com/mcp`.
 - [ ] You know which backlog item you want to work on (or are ready to search for one).
 
@@ -241,11 +255,27 @@ Agent: [Runs Definition of Done, adds evidence comment, sets DONE]
 - You don't have MCP access to `https://pg.mbintangr.com/mcp` — set up `notchlet-mcp` first.
 - You don't want the agent to ask for authorization at each phase boundary — use individual skills directly.
 
+Use `notchlet instructions <change> --action resume` to resume work on an existing local change.
+
+Continue / resume: locate current state with `notchlet status [<change>]`, `notchlet change list`, and continue only eligible work.
+
+## CLI command reference
+
+- `notchlet doctor` — diagnose workspace, binding, git, and server connectivity
+- `notchlet validate <id>` — validate that a change is ready
+- `notchlet task start <task-id> --change <id> --revision <revision>` — start a task
+- `notchlet task complete <task-id> --change <id> --revision <revision>` — complete a task
+
+## State-aware MCP tool calls
+
+- `development_changes_list({ productId?, limit?, cursor? })` and `development_change_get({ changeId })` to discover/read changes.
+- `development_instructions_get({ changeId, action, snapshotRevision?, context? })` — server-evaluated instructions; actions are `plan`, `revise`, `implement`, `verify`, `resume`
+- `development_delivery_create({ changeId, expectedRevision, operationId, payloadHash, snapshotRevision, target, backlogStatus?, repositoryRef?, summary? })` — explicit, idempotent delivery evaluation
+
 ---
 
 ## Skills Orchestrated
 
-- `notchlet-init` — workspace bootstrap: context files + MCP config
 - `notchlet-mcp` — setup and connection
 - `notchlet-platform` — discovery and item resolution
 - `notchlet-plan` — task decomposition and Definition of Ready
