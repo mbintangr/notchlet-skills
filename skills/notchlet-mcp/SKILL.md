@@ -36,19 +36,13 @@ Replace `your-mcp-token` with the MCP bearer token for the Notchlet backend. The
 
 ## Step 2: Verify the connection
 
-Quit and restart OpenCode so the `notchlet_*` MCP tools are advertised. Then run:
-
-```bash
-curl https://pg.mbintangr.com/mcp
-```
-
-Should return an MCP server initialization response.
+Quit and restart OpenCode so the authenticated MCP client can initialize and list the server's advertised tools. An unauthenticated HTTP `GET /mcp` is not a valid connection test: this server uses authenticated Streamable HTTP `POST` requests. If the Notchlet CLI is installed and the current directory is an initialized workspace, run `notchlet doctor` for authenticated capabilities and identity diagnostics.
 
 ## Troubleshooting
 
-- **MCP connection fails:** Verify the `Authorization` header matches the token expected by the backend, and that `curl https://pg.mbintangr.com/mcp` returns a response.
+- **MCP connection fails:** Verify the user-managed credential/configuration and restart OpenCode. Use an authenticated MCP initialization or `tools/list` request; do not use unauthenticated GET probes.
 - **Skills not showing:** Quit and restart OpenCode completely after configuring `opencode.jsonc`.
-- **No MCP token:** Ask the platform owner for a Notchlet MCP bearer token.
+- **No MCP token:** Ask the platform owner for a Notchlet MCP bearer token. Never put the token in a repository file, shell history, or command-line argument.
 
 ## When to use
 
@@ -57,7 +51,7 @@ Should return an MCP server initialization response.
 
 ## When NOT to use
 
-- When `opencode.jsonc` is already configured and `curl https://pg.mbintangr.com/mcp` returns a valid response.
+- When the authenticated MCP client already initializes and lists the needed tools, or `notchlet doctor` reports a healthy binding.
 - When you only need to plan, implement, or deliver — use the individual skill instead.
 
 ## Related skills
