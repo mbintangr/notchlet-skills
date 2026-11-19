@@ -36,4 +36,4 @@ OpenCode skills for Notchlet-driven development, formatted for skills.sh.
 ## Context Files
 - AGENTS.md — agent operating instructions tuned for Notchlet-driven development
 - PROMPT.md — this file, project context
-- opencode.jsonc — OpenCode configuration including Notchlet MCP (user-local, not in repo)
+- OpenCode `mcp.servers` configuration and Claude Code `.mcp.json` are client-managed setup; use the authenticated, currently supported Notchlet flow and never store a static project token in either file.

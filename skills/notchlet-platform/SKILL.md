@@ -9,16 +9,16 @@ Use this skill first to understand what is available on the connected Notchlet p
 
 ## Discover the platform
 
-1. Read available MCP operations and limitations from the connected `notchlet_*` host. Discover live tool names and schemas; never fabricate tool calls.
+1. Reuse the authenticated OpenCode or Claude Code MCP connection. Read available operations and limitations from the connected `notchlet_*` host; discover live tool names and schemas and never fabricate calls. If tools are absent, follow `notchlet-mcp` rather than guessing endpoint/config details.
 2. Use `notchlet_workspace_context` to list accessible organizations, teams, and products.
 3. Use `notchlet_workspace_search` to search products, documents, backlog items, and tickets by query.
 4. Resolve a product by ID or name before creating or refining backlog items under it.
 
 ## Resolve backlog items
 
-1. Resolve a backlog item by numeric ID, or search its title/key and fetch it with `notchlet_backlog_get`.
-2. If keys are duplicated, distinguish by title, product, parent, and numeric ID. Ask only if still ambiguous.
-3. Read the item's description, acceptance criteria, children, assignments, and linked documents before acting.
+1. Prefer the requested backlog key and title to find the existing item with `notchlet_workspace_search`; numeric ID is a fallback. Read the match with `notchlet_backlog_get` and verify key, title, product, and parent before acting.
+2. If keys or titles are duplicated, distinguish by product, parent, and numeric ID. Ask only if still ambiguous.
+3. Read the item's description, acceptance criteria, children, assignments, and linked documents before acting. Preserve its key/title as agent-facing references and retain numeric IDs for exact tool calls/parent references; do not pass credentials or secrets in queries.
 4. Use `backlog_development_context` (`itemId`; optional `section`, `cursor`, `knownFingerprint`, `limit`) for bounded item/ancestor/child/comment/document/repository/Git context. Its response is capped at 32 KiB serialized bytes and may include truncation metadata and scoped cursors; expand only what is needed, follow cursors with the same limit, and do not assume a truncated page is complete.
 
 ### Example MCP tool invocations
@@ -29,7 +29,7 @@ Use this skill first to understand what is available on the connected Notchlet p
   "tool": "notchlet_workspace_context"
 }
 
-// Fetch a backlog item by ID
+// Fetch a confirmed backlog item by ID after searching its key/title
 {
   "tool": "notchlet_backlog_get",
   "arguments": { "id": 42 }

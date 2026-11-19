@@ -5,7 +5,7 @@ description: Use when creating or refining Notchlet epics, stories, and tasks fr
 
 # Plan executable Notchlet backlogs
 
-Native `backlog_development_context`, `backlog_comments_list`, `backlog_comment_add`, and `backlog_activities_list` are available on the connected `notchlet_*` host; discover live tool names and schemas and use targeted-read/comment fallbacks where needed. Context is bounded to 32 KiB serialized bytes, may include truncation metadata and scoped cursors, and should be expanded only as needed.
+Reuse authenticated OpenCode/Claude Code MCP tools and discover their live names/schemas before calls. Native `backlog_development_context`, `backlog_comments_list`, `backlog_comment_add`, and `backlog_activities_list` may be available; use targeted-read/comment fallbacks when not advertised. Context is bounded to 32 KiB serialized bytes, may include truncation metadata and scoped cursors, and should be expanded only as needed. Prefer a backlog key/title for identification and keep numeric IDs for exact references and parent relationships.
 
 ## Entry criteria
 
@@ -15,7 +15,7 @@ Native `backlog_development_context`, `backlog_comments_list`, `backlog_comment_
 
 ## Discover scope
 
-1. Resolve the product from live workspace context. Read existing backlog/search results to avoid duplicates. Prefer refining an existing item when it covers the same requested work.
+1. Resolve the product from live workspace context. Search by the requested key/title, read the existing item and bounded context, and avoid duplicates. Prefer refining an existing item when it covers the same requested work; use its numeric ID only after verifying product, title, key, and parent.
 2. Read relevant BRD/PRD/SRD or CUSTOM documents and linked tickets. For migrations, inspect actual source workflows and code callers before claiming detailed coverage.
 3. Identify deliverables, exclusions, dependencies, and acceptance criteria. Never substitute generic migration titles for inspected behavior.
 4. Before decomposing an epic or story, inspect its current children, reuse/update matching existing children, and create only missing work. Do not duplicate already represented tasks.
@@ -46,6 +46,8 @@ A story or task is ready for `notchlet-implement` only when:
 - [ ] Scope is specific: capability, route, or component is named.
 - [ ] Verification criteria are defined (what test or evidence proves completion).
 - [ ] No unresolved blocking dependency remains.
+
+If any readiness condition is unmet, identify the exact gap and clarify or refine the existing item before implementation. A local CLI change/task plan does not replace platform requirements; likewise, a backlog item alone does not prove local work exists. Use `notchlet instructions <change> --action plan` and `notchlet validate <change>` for local change readiness when applicable; do not start tasks or implementation until the requested plan and local preconditions are clear.
 
 Description template:
 

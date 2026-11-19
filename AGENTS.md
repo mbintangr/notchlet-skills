@@ -63,12 +63,12 @@ Notchlet is the **source of product requirements and work status**. The reposito
 
 ### Phase 1: Setup (`notchlet-mcp`)
 - Reuse a valid user-managed MCP connection. Do not reconfigure it or ask the user to repeat setup when authenticated tools are already available.
-- Verify with authenticated MCP initialization and `tools/list`, or `notchlet doctor` when the CLI is installed in an initialized workspace. An unauthenticated HTTP `GET /mcp` is not a valid connection test; the service uses Streamable HTTP `POST`.
+- Verify through authenticated MCP client initialization and advertised `tools/list`, or use `notchlet doctor` for the authenticated CLI/workspace binding. Never probe MCP with unauthenticated HTTP requests; use only supported client setup and authenticated diagnostics. Keep MCP credentials out of project files and prompts.
 - If MCP is unreachable, continue repository work that does not depend on missing requirements; report the blocker; do not claim remote updates succeeded.
 
 ### Phase 2: Discover (`notchlet-platform`)
 - Resolve product via `notchlet_workspace_context` or `notchlet_workspace_search`. Never assume product from previous conversation.
-- Resolve backlog item by numeric ID via `notchlet_backlog_get`. If keys are duplicated, distinguish by title, product, parent, and numeric ID. Ask user only if still ambiguous.
+- Search for the backlog item by key/title, then read the confirmed match with `notchlet_backlog_get`; use numeric IDs for exact calls and only as a fallback. If keys are duplicated, distinguish by title, product, parent, and numeric ID. Ask user only if still ambiguous.
 - Read item description, acceptance criteria, children, assignments, linked documents before acting.
 - Use `backlog_development_context` for bounded context. Read specific sections only; do not dump full backlog.
 - Read linked BRD/PRD/SRD/CUSTOM documents via `notchlet_document_list` + `notchlet_document_get`.
