@@ -71,6 +71,15 @@ npx skills add mbintangr/notchlet-skills
 npx skills use mbintangr/notchlet-skills@notchlet-super --agent opencode
 ```
 
+### Install through the Notchlet CLI
+
+```bash
+notchlet client init opencode --apply    # targets: opencode, claude, agent
+notchlet client update opencode --apply  # refresh installed guidance later
+```
+
+`notchlet init --client opencode|claude` also installs skills together with the local MCP configuration; `notchlet client` handles skills only (including the generic `.agents/skills` target).
+
 ## File Structure
 
 ```
@@ -80,7 +89,7 @@ notchlet-skills/
 ├── README.md         # This file
 └── skills/
     ├── notchlet-init/
-    │   └── SKILL.md    # Workspace bootstrap: context files + MCP config
+    │   └── SKILL.md    # Optional legacy context helper; local setup is `notchlet init`
     ├── notchlet-mcp/
     │   └── SKILL.md
     ├── notchlet-platform/

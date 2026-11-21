@@ -14,6 +14,8 @@ Use this skill first to understand what is available on the connected Notchlet p
 3. Use `notchlet_workspace_search` to search products, documents, backlog items, and tickets by query.
 4. Resolve a product by ID or name before creating or refining backlog items under it.
 
+Server-side tool names are `workspace_context`, `workspace_search`, `backlog_get`, `backlog_development_context`, and so on. Clients namespace them under the configured server: the examples below use the OpenCode-style `notchlet_*` form, while Claude Code exposes `mcp__notchlet__*`. Always call the exact names returned by `tools/list`.
+
 ## Resolve backlog items
 
 1. Prefer the requested backlog key and title to find the existing item with `notchlet_workspace_search`; numeric ID is a fallback. Read the match with `notchlet_backlog_get` and verify key, title, product, and parent before acting.
@@ -56,9 +58,11 @@ Use this skill first to understand what is available on the connected Notchlet p
 
 ## Offline / degraded mode
 
-If the Notchlet MCP host (`pg.mbintangr.com`) is unreachable:
+If no authenticated Notchlet MCP host is reachable:
 
 - Continue repository work that does not depend on missing requirements (coding, testing, local verification).
+- Use the offline local server when configured (`notchlet init --local --client opencode`): its `notchlet_*` tools manage changes, tasks, verification, and evidence without an account.
+- Otherwise use the CLI: `notchlet change new`, `notchlet change update` / `change add`, `notchlet task start|complete`, `notchlet verify <change>`, and `notchlet evidence list --change <change>`.
 - Do not claim remote updates succeeded.
 - Record your intended changes locally so they can be synced when the platform returns.
 - Report the synchronization blocker; do not silently proceed with status changes that cannot be verified on the platform.

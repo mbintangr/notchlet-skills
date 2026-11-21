@@ -22,7 +22,7 @@ This legacy skill is optional. Do not run it automatically before `notchlet-supe
 5. Keep initialization local. Do not add tokens, personal data, or machine-specific paths to repository files.
 6. For an initialized workspace, skip setup and route to the requested phase with `notchlet-super` or the relevant phase skill.
 7. For connected diagnostics, initialize the authenticated MCP client and use `tools/list`, or run `notchlet doctor` for the authenticated CLI/workspace binding. Never use an unauthenticated HTTP GET to `/mcp` as a connection test.
-8. Local-only `notchlet init` does not configure MCP. Connected interactive init offers MCP setup separately. For the local handoff, reuse the bound workspace, import the confirmed backlog item by key/title when needed, then inspect CLI status/instructions and manage local change tasks through supported commands. Keep MCP for authenticated remote discovery and operations; never infer success from initiating a command.
+8. Plain `notchlet init` prepares the workspace without MCP configuration. Add `--client opencode|claude` to install skills and local MCP config for offline work, or use `notchlet init --interactive` for connected MCP setup. For the local handoff, reuse the bound workspace, import the confirmed backlog item by key/title when needed, then inspect CLI status/instructions and manage local change tasks through supported commands. Keep MCP for authenticated remote discovery and operations; never infer success from initiating a command.
 
 ## Related skills
 

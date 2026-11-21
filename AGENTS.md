@@ -17,6 +17,8 @@ Notchlet is the **source of product requirements and work status**. The reposito
 
 ## MCP Tool Inventory (Use These, Never Fabricate)
 
+Names below show the OpenCode-exposed form. The server registers the bare tool names (`workspace_context`, `backlog_get`, `development_instructions_get`, ...) and Claude Code exposes `mcp__notchlet__*`. Call the exact names returned by `tools/list`.
+
 ### Workspace Context
 - `notchlet_workspace_context` — list accessible organizations, teams, products
 - `notchlet_workspace_search` — search products, documents, backlog items, tickets by query
@@ -29,6 +31,14 @@ Notchlet is the **source of product requirements and work status**. The reposito
 
 ### Development Context
 - `backlog_development_context` — bounded context for one item (itemId; optional section: item|ancestors|children|comments|document|repositories; cursor; limit; knownFingerprint). Response capped at 32 KiB serialized bytes; may include truncation metadata and scoped cursors. Follow cursors with same limit; do not assume a truncated page is complete.
+
+### Development Workflow
+- `development_capabilities` — negotiated protocol/core versions and request limits
+- `development_changes_list` / `development_change_get` — discover and read changes
+- `development_change_create` — create a change; `development_snapshot_upload`, `development_snapshots_list`, `development_snapshot_get` — immutable snapshots keyed by expected revision and operation identity
+- `development_instructions_get` — server-evaluated instructions tied to a synchronized revision
+- `development_checkpoint_create` — synchronized checkpoint (not delivery evidence by itself)
+- `development_delivery_create` — explicit, idempotent delivery evaluation; query `development_operation_get` after an uncertain response
 
 ### Comments & Activities
 - `backlog_comments_list` — read comments on a backlog item
@@ -63,6 +73,7 @@ Notchlet is the **source of product requirements and work status**. The reposito
 
 ### Phase 1: Setup (`notchlet-mcp`)
 - Reuse a valid user-managed MCP connection. Do not reconfigure it or ask the user to repeat setup when authenticated tools are already available.
+- Without an account, use the offline local server: `notchlet init --local --client opencode` (or `claude`), or `notchlet mcp configure --client opencode --local`. Refresh installed guidance without touching MCP config with `notchlet client update <agent> --apply`.
 - Verify through authenticated MCP client initialization and advertised `tools/list`, or use `notchlet doctor` for the authenticated CLI/workspace binding. Never probe MCP with unauthenticated HTTP requests; use only supported client setup and authenticated diagnostics. Keep MCP credentials out of project files and prompts.
 - If MCP is unreachable, continue repository work that does not depend on missing requirements; report the blocker; do not claim remote updates succeeded.
 
@@ -91,6 +102,7 @@ Notchlet is the **source of product requirements and work status**. The reposito
 - Create feature branch; do not commit directly to main/develop unless authorized.
 - Implement complete behavior including authorization, validation, failure handling, caller integration.
 - Run focused checks: lint, type-check (`tsc --noEmit` or equivalent), unit tests, integration tests if touching database/MCP/external.
+- For local change work, author with `notchlet change update` / `change add` / `change apply` (never hand-edit `tasks.json`) and declare runnable `--command` checks. Verify with `notchlet verify <change> --record` (`--serve`, `--repeat`, `--capture-url`, `--attach` as needed), then inspect `notchlet evidence list --change <change>` and `notchlet status <change>`.
 - Inspect final diff for unintended files and exposed secrets.
 - Add `### Agent checkpoint` comment on backlog item with approach, changed files, exact check outcomes, actual branch/commit, blockers, next action.
 - Commit locally. Do NOT push, create PR, or deploy without explicit user authorization.
@@ -120,6 +132,7 @@ Notchlet is the **source of product requirements and work status**. The reposito
   - No unresolved blockers
   - Parent not marked DONE while required children remain open
 - Record `### Development evidence` comment with scope, changed components, verification, acceptance criteria met, Git evidence, blockers, resulting status.
+- For local-only work, recorded CLI evidence and `notchlet status` are the source of truth; do not claim a remote backlog update occurred when only local evidence was recorded.
 - Update item status to DONE and confirm returned state.
 - Do NOT auto-close linked GitHub issues (RESOLVED ≠ CLOSED).
 - Watch for regressions post-delivery; if regression appears, report and create follow-up fix item via `notchlet-plan`.
@@ -151,6 +164,7 @@ Notchlet is the **source of product requirements and work status**. The reposito
 ## When Notchlet MCP Is Unavailable
 
 - Continue repository work that does not depend on missing requirements (coding, testing, local verification).
+- Use the offline local server when configured (`notchlet init --local --client opencode`) or the CLI directly: `notchlet change update` / `change add`, `notchlet task start|complete`, `notchlet verify <change> --record`, and `notchlet evidence list --change <change>`.
 - Record intended changes locally so they can be synced when platform returns.
 - Report the synchronization blocker explicitly.
 - Do not claim remote updates succeeded.
