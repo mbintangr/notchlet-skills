@@ -1,58 +1,146 @@
 ---
 name: notchlet-super
-description: Route a Notchlet development request from current workspace state; resume existing work without restarting setup or planning.
+description: Use when you want to run the complete Notchlet-driven development cycle end-to-end — grill and plan, create backlogs, create the Git issue and branch, develop, push, open a PR, review it against the backlog description, fix, merge, and mark done — with authorization gates at every external side effect. Resume valid in-progress work instead of restarting completed phases.
 ---
 
-# Notchlet Super — state-aware router
+# Notchlet Super — full-cycle orchestrator
 
-Use this skill to route a request to the smallest relevant Notchlet action. Read current state first; do not replay a generic six-phase setup for every request. Ask only for material decisions or actions that need user authorization.
+Drive work from idea to merged using the Notchlet platform for requirements and status, Git for implementation truth, and the Notchlet CLI as the primary local tracking layer.
 
-## Route from the user's intent
+## Capability mode (check first)
 
-- **Explore / investigate (read-only):** inspect source, tests, documentation, or bounded MCP context. Do not run `notchlet init`, create/convert a change, edit code, transition tasks, sync, checkpoint, or write backlog state unless the user asks.
-- **Plan only (read-only unless asked to persist):** use `notchlet-plan`. Do not implement or deliver. Planning does not require initialization, an epic→story→task hierarchy, or application/change-artifact writes. A local change plan can be created/refined without starting tasks or writing application code. For an existing local change, `notchlet instructions <change> --action plan` gives planning guidance.
-- **Continue / resume:** reuse the identified workspace, product, repository, backlog item, and active change while they remain valid. Run `notchlet status <change-name-or-id>` and `notchlet instructions <change-name-or-id> --action resume`; continue only eligible tasks. Do not recreate the plan or restart setup when current state is valid. `notchlet instructions <change> --action resume` provides guidance for resuming a local change.
-- **Revise requirements or design:** use `notchlet-plan` and `notchlet instructions <change-name-or-id> --action revise`; preserve stable IDs and existing progress. Revalidate before implementation. `notchlet instructions <change> --action revise` gives revision guidance for an existing local change.
-- **Implement / verify:** use `notchlet-implement`, `notchlet instructions <change-name-or-id> --action implement|verify`, and the repository's actual test commands. Mark a task complete only after its verification evidence exists. For an existing local change, use `notchlet instructions <change> --action implement` or `--action verify` as appropriate. Author with `notchlet change update` / `notchlet change add` / `notchlet change remove`; checks may declare `--command`. Edit one item in place with `notchlet change update <change> <kind> <item-id> ...` (task progress is preserved), or apply an ordered `{ expectedRevision, operations }` file atomically with `notchlet change apply <change> --file <plan.json>`; pass `--revision` on authoring writes so stale changes fail before anything is modified. Declared `proposal.md`/`spec.md` render with `notchlet change render <change> --check|--write`. Use `notchlet task start <task-name-or-id> --change <change-name-or-id> --revision <revision>` and `notchlet task complete <task-name-or-id> --change <change-name-or-id> --revision <revision>` for revision-checked transitions (omit `--revision` to use the current revision), then `notchlet verify <change> --record` and `notchlet evidence list --change <change>`. Task names are accepted as friendly references, with IDs retained for scripts. Declare links when authoring a check (`--requirement`, `--task`); verify records only executed checks plus their declared or explicit links, `--requirement`/`--task` require `--record`, and completion warns without current passed evidence (`--require-evidence` blocks instead). Reopening stays ungated, and stale, failed, `unknown`, or missing evidence prints a recovery command that must be run deliberately.
-- **Review:** use `notchlet-review`; distinguish a self-recorded check from independent human review.
-- **Deliver:** use `notchlet-deliver`. A branch-linked item requires the exact linked PR/MR to be merged and approved before a `DONE` status request. Delivery only evaluates existing provider state; it does not merge or deploy.
+Decide the mode once per session and reuse it unless connectivity changes:
 
-## Reuse current workspace and connection
+- **Connected** — authenticated MCP tools are advertised, or `notchlet doctor` reports a workspace binding. The platform is the authority for requirements and status; the CLI is the primary local tracking layer.
+- **Local** — no account/platform MCP, but the CLI or offline server is available. The CLI is the primary workflow for the plan, tasks, and evidence; platform-only steps are deferred as `sync pending`.
+- **Neither** — do repository-only work and report that tracking is unavailable.
 
-1. Use the nearest initialized `.notchlet` workspace or the user's explicit `--workspace <path>`.
-2. If there is no initialized workspace, local reads are side-effect free. Run `notchlet init` only when setup is actually required and the user approves it; do not assume a separate bootstrap command exists.
-3. For connected work, use `notchlet doctor` to test authenticated capabilities and identity. Do not probe `/mcp` with an unauthenticated `GET`; Notchlet MCP uses authenticated Streamable HTTP `POST` requests.
-4. Prefer product and repository names in `notchlet workspace bind`; the authenticated CLI resolves them against the selected server. Keep numeric IDs for scripts, and never transfer them between servers. Rebind only after confirming the intended server/product/repository identity.
-5. Fetch bounded context for the selected backlog item; never dump the entire product to find one item.
-6. If MCP credentials or connection settings are genuinely missing, use `notchlet-mcp` to configure and verify them; otherwise skip setup and reuse the working binding. When no account is available, configure the offline local server instead of blocking on remote MCP.
-7. If the requested backlog item or product is not yet identified, use `notchlet-platform`; if the identity is already confirmed, reuse it instead of searching again. The CLI accepts backlog item keys or titles for import and infers the product from the workspace binding.
+Prefer connected whenever it is present. Never silently fall back to local because local always works. Never present local evidence, local closure, or a local status as a remote update. When connectivity returns, run `notchlet sync status --change <change>`, reconcile, and sync only when authorized.
 
-For a new coding request, search existing backlog items by key/title through MCP, read the match and bounded context, and confirm product/parent/title before proceeding. Use the backlog key and title in agent-facing handoffs; retain numeric IDs only as exact API/parent references or fallback when the key is absent. Read linked requirements and cursor pages as needed without dumping the product backlog. Check existing remote and local work before creating anything. When planning is required, define measurable acceptance criteria, scope, dependencies, verification, and Definition of Ready; clarify material gaps before implementation. For an eligible local change, import the existing backlog item with `notchlet backlog import <key-or-title>` only if no matching change exists; the CLI resolves product from workspace binding. Inspect status/instructions, validate readiness, and create/start/complete local tasks only through the supported CLI commands and revision checks. MCP handles authenticated remote context and authorized platform operations; CLI handles local change/task state and explicit sync handoff. Verify actual code with repository checks and record exact command output, changed files, and blockers as evidence. Never include tokens or credentials in copied prompts, CLI arguments, repository config, or evidence.
+## The base flow
 
-For local readiness checks, run `notchlet validate <change-name-or-id>`; `notchlet change list` lists local changes. Create and refine plans with `notchlet change update` and `notchlet change add`, or author a full plan in one atomic batch with `notchlet change apply`; edit items in place with `notchlet change update <change> <kind> <item-id>`; set run metadata with `notchlet change update <change> --run-command <cmd> --readiness-url <url> --ready-timeout <ms> --environment KEY=value`; do not hand-edit `tasks.json`. Structural validity is checked on each write, while `validate`/readiness still reports incomplete planning. Quick changes require an explicit capability declaration (`--capability-impact none|delta` plus a rationale for `none`) before validation succeeds.
+| Step | Phase | Agent action | Authorization gate |
+|------|-------|--------------|--------------------|
+| 1 | Plan & grill | Interrogate the request until requirements are unambiguous, then produce a plan. | — |
+| 2 | Create backlogs | Create epic → stories → tasks on Notchlet with a Definition of Ready. | Confirm the backlog plan |
+| 3 | Implement | Create/link the Git issue, create the branch from the item, checkout locally, develop, run checks, commit, push. | Confirm issue + branch; confirm push |
+| 4 | Deliver | Open a PR, review it against the backlog description, fix/commit/push if rejected, merge. | Confirm PR; confirm merge |
+| 5 | Done | Record evidence, set the backlog item to DONE, sync the Git issue. | Confirm DONE |
 
-## State-aware MCP tool calls
+Never combine gates silently. If the user pre-authorizes a group of actions, that authorization applies only to the stated scope.
 
-The connected Notchlet server registry exposes these tools; clients usually namespace them under the configured server (for example `notchlet_backlog_get` in OpenCode or `mcp__notchlet__backlog_get` in Claude Code). Call only the exact names returned by `tools/list`, and do not assume the new development tools are deployed on every server:
+Git steps (issue, branch, commit, push, PR, merge) run in both modes. Platform steps (backlog create/verify, Notchlet issue linking, remote status, `DONE`) are required in connected mode and deferred as `sync pending` in local mode.
 
-- `backlog_development_context({ itemId, section?, cursor?, knownFingerprint?, limit? })` for one bounded item context.
-- `development_changes_list({ productId?, limit?, cursor? })` and `development_change_get({ changeId })` to discover/read changes.
-- `development_instructions_get({ changeId, action, snapshotRevision?, context? })` for server-evaluated instructions tied to a synchronized revision.
-- `development_delivery_create({ changeId, expectedRevision, operationId, payloadHash, snapshotRevision, target, backlogStatus?, repositoryRef?, summary? })` for an explicit, idempotent delivery evaluation. `backlogStatus` additionally requires `backlog:write`; query the operation after an uncertain response and use a new operation ID only for a new attempt.
+## Phase 1 — Plan & grill (`notchlet-plan`)
 
-The REST API and MCP tools call the same `DevelopmentService`; preserve their expected revisions, operation IDs, payload hashes, scope checks, and error recovery semantics. Do not infer that remote snapshot state represents unsynchronized local edits.
+Ask before writing anything:
 
-Without an account, the offline server (`notchlet init --local --client opencode`, or `notchlet mcp configure --client opencode --local`) registers and advertises these tool names: `notchlet_change_list`, `notchlet_change_get`, `notchlet_change_create`, `notchlet_change_update`, `notchlet_change_add`, `notchlet_change_remove`, `notchlet_change_apply`, `notchlet_change_render`, `notchlet_change_baseline`, `notchlet_change_delta`, `notchlet_task_transition`, `notchlet_verify`, `notchlet_evidence_record`, `notchlet_evidence_list`, `notchlet_instructions`, and `notchlet_workspace_status`. Some clients add their own server prefix; use only the names returned by `tools/list`. A direct remote setup (`notchlet mcp configure --client opencode --transport remote --server <url>`) writes `type: "remote"` with `url: "<url>/mcp"` and an `Authorization` header that references `{env:NOTCHLET_MCP_TOKEN}`; never replace that reference with a literal token.
+- What outcome must be observable when this is done?
+- Who uses it, and what is the primary path?
+- What is explicitly out of scope?
+- What are the failure modes and edge cases?
+- Does it touch data, migrations, integrations, or permissions?
+- How will we verify it (tests, commands, evidence)?
+- What dependencies or blockers exist?
 
-## Capability closure
+Ask in small batches, one decision per question, and stop when the Definition of Ready can be met. Summarize the answers back to the user before creating backlog items.
 
-- Classify the capability contribution before closure: `none` only for a quick change with `--capability-impact none` and a non-empty rationale; `delta` when the change declares a capability delta; `standard` otherwise. Quick no-impact changes close without a baseline revision, delta operations, or any capability-baseline write.
-- Standard and delta changes capture the current baseline with `notchlet change baseline <change-name-or-id> --revision <change-revision>` (optionally `--capability-name <name>`), then author explicit operations with `notchlet change delta <change-name-or-id> add|update|remove --requirement <id> --rationale "<reason>"`. Delete an operation with `notchlet change delta <change-name-or-id> delete --requirement <id>`. Operations snapshot the authored requirement and linked scenarios; re-author after editing them.
-- `notchlet change close <change-name-or-id> --preview` is read-only and reports planning readiness, verification, local closure, and remote delivery separately. Every blocker includes a `recovery` command or `recoveryTool`. Close standard and delta changes with `--baseline-revision <n>`; close no-impact changes without it.
-- Evidence freshness exposes an observation `basis` of `git` or `artifact`. Artifact-bound evidence can satisfy local closure without a Git repository; stale or `unknown` verification (for example a truncated Git observation) blocks closure until re-verified.
+**Proceed when:** the plan is confirmed.
 
-## Authorization and handoff
-- Preserve explicit authorization boundaries. Never push, open/merge a PR, deploy, publish skills, or change remote status merely because a task is complete.
-- Use `notchlet sync status|push|pull --change <change-name-or-id>` for explicit snapshot synchronization. Divergence requires review; use `notchlet sync resolve --change <change-name-or-id> --keep-local` only after reviewing the local artifacts, then retry conditionally.
-- `notchlet checkpoint --change <id> --name <name>` records a synchronized checkpoint; it is not delivery evidence by itself.
-- Local verification, local closure, remote delivery, merge, and deployment are separate outcomes. Never describe merge as deployment or a requested status as successful until the service response confirms it.
+## Phase 2 — Create backlogs (`notchlet-plan`)
+
+- Resolve the product; check for duplicate items and refine instead of duplicating.
+- Create epic → stories → tasks sequentially, capturing each returned numeric ID for `parentId`.
+- Apply the Definition of Ready: measurable acceptance criteria, dependencies (or "none"), specific scope, verification criteria, no blocking dependency.
+- Use the description template: Outcome / Scope / Acceptance criteria / Dependencies / Verification.
+- Verify the created hierarchy by reading it back.
+
+**Mode behavior:** connected — create and verify the hierarchy on the platform, then import the item with `notchlet backlog import` and author the executable checks/tasks locally. Local — author the plan as a local change and record platform backlog creation as `sync pending`.
+
+**Proceed when:** the backlog hierarchy is verified and the first executable item is ready (or, in local mode, the local change plan is validated).
+
+## Phase 3 — Implement (`notchlet-implement`)
+
+For the selected backlog item:
+
+1. **Create the Git issue** with `notchlet_git_issue_create` (or `notchlet_git_issue_link` for an existing issue). Verify the returned issue number/URL.
+2. **Create the branch** as `<type>/<backlog-key>-<slug>` (for example `feat/APP-42-slack-toggle`) from an up-to-date `main`/`develop`.
+3. **Checkout the branch locally.**
+4. Set the item to `IN_PROGRESS`.
+5. Implement the complete behavior, including authorization, validation, failure handling, and caller integration.
+6. Run focused checks: lint, type-check, unit tests, and integration tests where relevant.
+7. Commit with a conventional message referencing the backlog key.
+8. Push when authorized.
+9. Add an `### Agent checkpoint` comment with approach, changed files, exact check results, branch/commit, blockers, and next action.
+
+**Mode behavior:** connected — create/link the issue with the Notchlet Git issue tools, import the item to a local change, and use `task start/complete` plus `verify --record` as you go. Local — create the provider issue if a provider CLI is available (link it later), use the local change for tasks/verify, and mark the Notchlet issue link `sync pending`.
+
+**Proceed when:** implementation is pushed (or the user chooses to stop at the local commit).
+
+Do not open a PR here; that belongs to delivery.
+
+## Phase 4 — Deliver (`notchlet-deliver`, review via `notchlet-review`)
+
+1. **Open the PR** from the feature branch into the target branch. Reference the backlog key in the title and body and link the Git issue.
+2. **Review against the backlog description** and every acceptance criterion using `notchlet-review`.
+3. **If changes are requested:** return to implementation, fix, commit, push, and re-review the changed scope.
+4. **Merge the PR** when authorized.
+5. Verify the PR actually merged; a closed-unmerged PR is not merge proof.
+
+**Mode behavior:** connected — record review evidence and set the item to `IN_REVIEW` through the platform. Local — review against the local change requirements and record evidence locally; remote status stays `sync pending`. Local without a Git remote: skip PR/merge and deliver locally.
+
+Do not deploy or publish as part of this step unless separately authorized.
+
+## Phase 5 — Done (`notchlet-deliver`)
+
+- Check the Definition of Done: every acceptance criterion has evidence, checks pass, review approved, PR merged, no blockers, and no open required children.
+- Record a `### Development evidence` comment.
+- Set the item to `DONE` and confirm the returned state.
+- Sync the Git issue when authorized. `RESOLVED` is not `CLOSED`.
+- Watch for regressions; create a follow-up item if delivery breaks something.
+
+**Mode behavior:** connected — record remote evidence, set `DONE`, and sync the issue. Local — record local evidence, run `notchlet change close --preview` (then close when eligible), and report remote `DONE` and issue sync as `sync pending` until connectivity returns.
+
+## Resume current work
+
+Before starting any phase, inspect state and skip what is already valid:
+
+- `git branch --show-current`, `git status --short`, recent commits.
+- Existing backlog item, Git issue, open PR, and (if used) local change.
+- Continue by state: no plan → plan; plan exists → implement; branch pushed → open PR; PR open → review; approved → merge; merged → evidence and DONE.
+
+Reuse a valid MCP connection, workspace binding, product, repository, item, and branch. Do not restart setup, re-plan, or recreate issues/branches that already exist. If two records disagree (for example a local commit but no issue), reconcile rather than duplicating.
+
+## CLI tracking layer (primary when available)
+
+The CLI holds the executable plan, task progress, verification, and evidence. It is required whenever available: in connected mode it mirrors the platform backlog and syncs; in local mode it is the only tracking store until sync is possible. The Git steps still run in either mode.
+
+- **Setup / binding:** `notchlet init`, `notchlet doctor`, `notchlet workspace bind`. Without an account, use `notchlet init --local --client opencode`.
+- **Import the item (connected):** `notchlet backlog import <key-or-title>` from the initialized, correctly bound workspace. In local mode, create the change directly.
+- **Author the plan:** `notchlet change update <change> ...`, `notchlet change add <change> requirement|check|scenario|decision|task ...`, or an atomic `notchlet change apply <change> --file <plan.json>`.
+- **Tasks:** `notchlet task start|complete <task> --change <change>`.
+- **Verify and record evidence:** `notchlet verify <change> --record`, then `notchlet evidence list --change <change>`.
+- **Inspect state:** `notchlet status <change>`, `notchlet validate <change>`, `notchlet instructions <change> --action plan|implement|verify|resume|revise`.
+- **Close and sync:** `notchlet change close <change> --preview`, `notchlet sync status|push|pull --change <change>`, `notchlet checkpoint --change <id> --name <name>`.
+
+Rules: never hand-edit `tasks.json`; pass `--revision` on authoring writes so stale changes fail before writing; local closure, remote delivery, PR merge, and deployment are separate outcomes. In connected mode, sync changes back after delivery. Delivery evaluation inspects provider state; it does not merge or deploy.
+
+## Safety
+
+- [ ] Never push, open or merge a PR, deploy, or set DONE without explicit authorization. Create the remote issue and branch only behind the start-development gate.
+- [ ] Prefer connected mode whenever platform MCP is available; never silently default to local-only.
+- [ ] Never claim a tool succeeded when it returned an error or was unavailable.
+- [ ] Never present local evidence, local closure, or local status as a remote update.
+- [ ] Never fabricate check results, evidence, issue numbers, or PR URLs.
+- [ ] Never write secrets or credentials into comments, branches, commits, or config.
+- [ ] Never mark a parent DONE while required children remain open.
+- [ ] Never treat a local commit, closed-unmerged PR, or `RESOLVED` ticket as proof of completion.
+
+## Skills orchestrated
+
+- `notchlet-mcp` — connection setup only when needed
+- `notchlet-platform` — product and item resolution
+- `notchlet-plan` — grilling, decomposition, Definition of Ready
+- `notchlet-implement` — issue, branch, code, checks, commit, push
+- `notchlet-review` — PR review against the backlog description
+- `notchlet-deliver` — PR, merge, evidence, status, issue sync

@@ -1,6 +1,6 @@
 # Notchlet-Driven Development Skills Repository
 
-This repository contains state-aware **Notchlet-driven development** skills for OpenCode and Claude Code, formatted for [skills.sh](https://www.skills.sh/). Install the router and its phase skills with:
+This repository contains **Notchlet-driven development** skills for OpenCode and Claude Code, formatted for [skills.sh](https://www.skills.sh/). Install them with:
 
 ```bash
 npx skills add mbintangr/notchlet-skills
@@ -10,18 +10,48 @@ npx skills add mbintangr/notchlet-skills
 
 | Skill | Purpose |
 |-------|---------|
+| `notchlet-super` | **Full-cycle orchestrator** — grill and plan → create backlogs → issue/branch/develop/push → PR/review/fix/merge → done. Asks for authorization at each gate. |
 | `notchlet-init` | Optional legacy helper for context-file generation; never run automatically |
-| `notchlet-super` | **State-aware router** — resumes current work, skips valid setup, and routes to the requested phase. |
 | `notchlet-mcp` | Configure and verify an authenticated Notchlet MCP connection when needed |
-| `notchlet-platform` | Discover products, resolve backlog items, understand available MCP operations |
-| `notchlet-plan` | Create/refine epics, stories, tasks, acceptance criteria, dependencies |
-| `notchlet-implement` | Implement backlog items/tickets from discovery through verification |
-| `notchlet-review` | Review implemented work, approve or request changes before delivery |
-| `notchlet-deliver` | Record evidence and update statuses based on verified completion |
+| `notchlet-platform` | Discover products and resolve backlog items; the item key drives the issue, branch, and PR |
+| `notchlet-plan` | Grill requirements, then create/refine epics, stories, tasks with a Definition of Ready |
+| `notchlet-implement` | Create/link the Git issue, create and checkout the branch, implement, check, commit, push |
+| `notchlet-review` | Review the PR against the backlog description and acceptance criteria |
+| `notchlet-deliver` | Open the PR, run review, drive fixes, merge, record evidence, set DONE |
 
-Start with `notchlet-super` for a full-cycle request, or use one phase skill directly. The router reuses a valid workspace, item, and change; it does not initialize context files, restart setup, or re-plan existing work by default. Use the `notchlet init` CLI only when local workspace setup is needed and authorized.
+Start with `notchlet-super` for a full-cycle request, or use one phase skill directly.
 
-The skills cover the Notchlet-driven development loop: **discover → plan → implement → review → deliver**, with setup only when needed.
+## The base flow
+
+```text
+┌──────────────┐   ┌──────────┐   ┌───────────────┐   ┌──────────────┐   ┌──────┐
+│ 1. Plan &    │──▶│ 2. Create│──▶│ 3. Implement  │──▶│ 4. Deliver   │──▶│ 5.   │
+│    grill     │   │  backlogs│   │ issue → branch│   │ PR → review  │   │ Done │
+│              │   │          │   │ → code → push │   │ → fix → merge│   │      │
+└──────────────┘   └──────────┘   └───────────────┘   └──────────────┘   └──────┘
+```
+
+1. **Plan & grill** — interrogate the request until requirements are unambiguous, then plan.
+2. **Create backlogs** — epic → stories → tasks on Notchlet with measurable acceptance criteria and a Definition of Ready.
+3. **Implement** — create/link the Git issue, create the `<type>/<key>-<slug>` branch, checkout, develop, run checks, commit, push.
+4. **Deliver** — open the PR, review it against the backlog description, fix/commit/push if changes are requested, then merge.
+5. **Done** — record evidence, set the backlog item to DONE, sync the Git issue.
+
+Authorization is required before creating the remote issue and branch, pushing, opening a PR, merging, or setting DONE.
+
+## Capability modes
+
+Every skill determines the mode before acting:
+
+- **Connected** — authenticated Notchlet MCP tools are available. The platform is authoritative for requirements and status; the CLI is the primary local tracking layer and stays linked through import/sync.
+- **Local** — no account, but the CLI/offline server is available. The CLI is the primary workflow; platform-only steps (backlog creation, Notchlet issue linking, remote status) are deferred as `sync pending`.
+- **Neither** — repository-only work; tracking is unavailable and reported as a blocker.
+
+Prefer connected whenever present; never silently fall back to local because local always works, and never present local evidence or closure as a remote update. Detection lives in `notchlet-mcp`.
+
+## CLI tracking layer
+
+The Notchlet CLI (`notchlet change`, `task`, `verify`, `evidence`, `checkpoint`, `sync`) is the primary local tracking layer whenever available: in connected mode it mirrors the platform backlog and syncs; in local mode it is the only tracking store until sync is possible. It complements the Git flow rather than replacing it. The consolidated command reference lives in `skills/notchlet-super/SKILL.md`.
 
 ## Legacy aliases
 
@@ -33,25 +63,17 @@ The skills cover the Notchlet-driven development loop: **discover → plan → i
 | `notchlet-init` | Optional legacy context helper. Local workspace creation is `notchlet init`; MCP connection setup is `notchlet-mcp`. |
 | `notchlet-n8n-migration` | Specialized workflow: retain an installed copy; it is not part of the core Notchlet skill set. |
 
-```text
-┌────────────┐    ┌─────────────┐    ┌────────┐    ┌────────────┐    ┌────────┐    ┌─────────┐
-│ Current    │───▶│ Requested   │───▶│ Plan   │───▶│ Implement /│───▶│ Review │───▶│ Deliver │
-│ state      │    │ phase       │    │ if     │    │ verify     │    │ if     │    │ if      │
-│            │    │             │    │ needed │    │            │    │ needed │    │ eligible│
-└────────────┘    └─────────────┘    └────────┘    └────────────┘    └────────┘    └─────────┘
-```
-
 Each skill is a directory under `skills/` containing a `SKILL.md` file with YAML frontmatter (`name`, `description`), following the [skills.sh skill format](https://github.com/vercel-labs/skills/blob/main/docs/creating-skills.md).
 
 ## Quick Start
 
-### Recommended: state-aware routing
+### Recommended: full cycle with notchlet-super
 
 ```bash
 npx skills add mbintangr/notchlet-skills --skill notchlet-super
 ```
 
-Then tell the agent: *"Use notchlet-super to continue the active Notchlet change."* It inspects current state and resumes the requested phase. Setup, planning, review, and delivery are performed only when needed, with authorization required for external side effects.
+Then tell the agent: *"Use notchlet-super to take APP-42 from plan to merged."* The agent will grill the requirements, create the backlog, create the issue and branch, implement, push, open a PR, review it against the backlog description, fix anything rejected, merge, and set the item to DONE — pausing for authorization at each gate.
 
 ### Install a single skill
 
@@ -89,7 +111,7 @@ notchlet-skills/
 ├── README.md         # This file
 └── skills/
     ├── notchlet-init/
-    │   └── SKILL.md    # Optional legacy context helper; local setup is `notchlet init`
+    │   └── SKILL.md    # Optional legacy context helper
     ├── notchlet-mcp/
     │   └── SKILL.md
     ├── notchlet-platform/
@@ -103,7 +125,7 @@ notchlet-skills/
     ├── notchlet-deliver/
     │   └── SKILL.md
     └── notchlet-super/
-        └── SKILL.md   # Meta-skill: full-cycle orchestrator
+        └── SKILL.md   # Full-cycle orchestrator
 ```
 
 ## License

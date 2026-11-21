@@ -7,6 +7,14 @@ description: Use when discovering the Notchlet platform, resolving products and 
 
 Use this skill first to understand what is available on the connected Notchlet platform before planning, implementing, or delivering work.
 
+## Capability mode (check first)
+
+- **Connected** — authenticated MCP tools are advertised, or `notchlet doctor` reports a workspace binding. Use platform discovery below; the platform is the authority for requirements and status.
+- **Local** — no account/platform MCP, but the CLI or offline server is available. Discover and resolve work through the local change state (`notchlet change list`, `notchlet status`, `notchlet instructions`), and mark platform backlog/issue/status actions `sync pending`.
+- **Neither** — no discovery; proceed with repository work only and report that tracking is unavailable.
+
+Prefer connected whenever present; never silently fall back to local.
+
 ## Discover the platform
 
 1. Reuse the authenticated OpenCode or Claude Code MCP connection. Read available operations and limitations from the connected `notchlet_*` host; discover live tool names and schemas and never fabricate calls. If tools are absent, follow `notchlet-mcp` rather than guessing endpoint/config details.
@@ -21,6 +29,7 @@ Server-side tool names are `workspace_context`, `workspace_search`, `backlog_get
 1. Prefer the requested backlog key and title to find the existing item with `notchlet_workspace_search`; numeric ID is a fallback. Read the match with `notchlet_backlog_get` and verify key, title, product, and parent before acting.
 2. If keys or titles are duplicated, distinguish by product, parent, and numeric ID. Ask only if still ambiguous.
 3. Read the item's description, acceptance criteria, children, assignments, and linked documents before acting. Preserve its key/title as agent-facing references and retain numeric IDs for exact tool calls/parent references; do not pass credentials or secrets in queries.
+4. The confirmed key/title drives downstream Git work: the issue title, the `<type>/<key>-<slug>` branch name, and the PR title/body. Carry it forward so issue, branch, PR, and backlog item stay linked.
 4. Use `backlog_development_context` (`itemId`; optional `section`, `cursor`, `knownFingerprint`, `limit`) for bounded item/ancestor/child/comment/document/repository/Git context. Its response is capped at 32 KiB serialized bytes and may include truncation metadata and scoped cursors; expand only what is needed, follow cursors with the same limit, and do not assume a truncated page is complete.
 
 ### Example MCP tool invocations
@@ -56,24 +65,26 @@ Server-side tool names are `workspace_context`, `workspace_search`, `backlog_get
 1. Use `backlog_comments_list` / `backlog_comment_add` to read or record checkpoint comments on a backlog item.
 2. Use `backlog_activities_list` to read the activity history for a backlog item.
 
-## Offline / degraded mode
+## Local mode (no account)
 
 If no authenticated Notchlet MCP host is reachable:
 
 - Continue repository work that does not depend on missing requirements (coding, testing, local verification).
 - Use the offline local server when configured (`notchlet init --local --client opencode`): its `notchlet_*` tools manage changes, tasks, verification, and evidence without an account.
-- Otherwise use the CLI: `notchlet change new`, `notchlet change update` / `change add`, `notchlet task start|complete`, `notchlet verify <change>`, and `notchlet evidence list --change <change>`.
+- Otherwise use the CLI directly: `notchlet change list`, `notchlet change update` / `change add`, `notchlet task start|complete`, `notchlet verify <change>`, and `notchlet evidence list --change <change>`.
+- Author the local change as the working requirements/plan source; record intended platform actions (backlog creation, issue linking, status) as `sync pending`.
 - Do not claim remote updates succeeded.
-- Record your intended changes locally so they can be synced when the platform returns.
+- When connectivity returns, run `notchlet sync status --change <change>`, resolve divergence, then sync when authorized.
 - Report the synchronization blocker; do not silently proceed with status changes that cannot be verified on the platform.
 
 ## When to use
 
-- Before any planning, implementation, or delivery: resolve the product and item first.
+- Before any planning, implementation, or delivery: determine the capability mode and resolve the product and item (connected) or the local change (local) first.
 - When you need to understand what MCP tools are available on the connected Notchlet host.
 - When you need to search across products, documents, backlog items, or tickets.
 - When you need bounded context for one backlog item without dumping the full backlog.
 - When you suspect a conflict on an item's description or status.
+- When deciding whether to use the platform or the local CLI workflow.
 
 ## When NOT to use
 

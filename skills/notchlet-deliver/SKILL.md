@@ -1,96 +1,120 @@
 ---
 name: notchlet-deliver
-description: Use when recording development evidence, reviewing completed Notchlet work, synchronizing authorized Git issues, or updating backlog and ticket status after implementation and verification. Final step before work is considered complete.
+description: Use when delivering implemented Notchlet work. Opens the PR from the feature branch, runs review against the backlog description, drives the fix-commit-push loop, merges the PR, records development evidence, sets the backlog item to DONE, and syncs the Git issue when authorized.
 ---
 
-# Evidence-based Notchlet delivery
+# Deliver Notchlet work
 
-Native `backlog_comment_add` and related context tools are available on the connected `notchlet_*` host; discover live tools and use supported fallbacks. Use `expectedDescriptionRevision` on description edits when supported, reconciling conflicts by rereading.
+Delivery starts when the implementation branch is pushed and ends when the merged PR is recorded and the backlog item is `DONE`. Notchlet remains the source of status; the repository is the source of truth.
+
+## Capability mode (check first)
+
+- **Connected** — authenticated MCP tools are advertised, or `notchlet doctor` reports a workspace binding. Record remote evidence, set `DONE`, and sync the Git issue on the platform.
+- **Local** — no account/platform MCP, but the CLI or offline server is available. Deliver through Git where a remote exists, record local evidence, and close locally; remote `DONE` and issue sync stay `sync pending`.
+- **Neither** — deliver in the repository only and report that tracking is unavailable.
+
+Prefer connected whenever present; never silently fall back to local. Never present local closure as a remote status update.
 
 ## Entry criteria
 
-- Implementation is complete via `notchlet-implement`.
-- Code review via `notchlet-review` is approved (or review is not required per team policy).
-- All focused checks pass (lint, type-check, tests).
-- PR/MR is merged (for branch-linked work) or implementation is committed (for issue-only items).
+- Implementation is complete and pushed via `notchlet-implement`.
+- The feature branch exists and is up to date with the target branch (`main`/`develop`).
+- The item is resolved and set to `IN_PROGRESS` (move to `IN_REVIEW` when the PR opens).
+- The user has authorized opening the PR. If no Git remote or PR exists, delivery ends at local evidence and `change close`.
 
-## Evaluate readiness
+## Step 1 — Open the PR
 
-- Compare implementation and checks against every acceptance criterion.
-- Inspect actual test output and diff. Record failures and blockers rather than treating an attempted test as a passing check.
-- For branch-linked coding work, verify the matching PR/MR is confirmed merged; issue closure, a closed-unmerged PR/MR, or a local commit alone is not merge proof. Do not report branch-linked work complete until merge is verified. Issue-only items can retain their existing acceptance policy.
-- Use `IN_PROGRESS` for incomplete implementation or unresolved verification blockers.
-- Use `IN_REVIEW` when implementation/checks are ready and required review or acceptance remains.
-- Use `DONE` only when the item's completion conditions are met and required review has occurred. Do not treat a PR, commit, or successful build alone as proof of feature completion.
-- An epic/story is complete only when its own acceptance criteria and all required children are complete. Re-read the hierarchy before updating a parent.
+1. Open a PR/MR from the feature branch into the target branch.
+2. Title and body must reference the backlog key and link the Git issue. Summarize scope and list the acceptance criteria being met.
+3. Verify the PR number/URL actually returned by the provider; never invent one.
+4. Set the backlog item to `IN_REVIEW`.
 
-## Definition of Done (checklist before marking DONE)
+Confirm before opening the PR. Do not push unrelated commits or include secrets. If there is no Git remote or PR provider, skip to Step 5 and record local evidence with `change close`.
+
+## Step 2 — Review against the backlog description
+
+Run `notchlet-review` using the latest backlog description and acceptance criteria. Distinguish a self-recorded check from independent human review.
+
+## Step 3 — Fix loop (if changes are requested)
+
+1. Return to `notchlet-implement` and fix every requested item.
+2. Run focused checks again.
+3. Commit and push to the same branch (authorized).
+4. Re-run `notchlet-review` on the changed scope.
+
+Repeat until review approves. Do not merge an unapproved PR when review is required by policy.
+
+## Step 4 — Merge
+
+1. Merge the PR only when authorization is explicit.
+2. Verify the PR state is actually merged. A closed-unmerged PR, a local commit, or issue closure is not merge proof.
+3. Confirm the target branch contains the change.
+
+## Step 5 — Evidence and DONE
+
+### Definition of Done
 
 - [ ] Every acceptance criterion is met with actual evidence (test output, diff, command results).
-- [ ] All focused checks pass (lint, type-check, tests).
-- [ ] Code review is approved (via `notchlet-review`) or review is not required.
-- [ ] PR/MR is merged (branch-linked work) or implementation is committed (issue-only work).
-- [ ] Backlog item status reflects the true state (`IN_PROGRESS`, `IN_REVIEW`, or `DONE`).
-- [ ] Parent item is not marked `DONE` while required children remain open.
-- [ ] No unresolved blockers remain; blockers are documented if present.
+- [ ] All focused checks pass.
+- [ ] Review is approved, or review is not required per team policy.
+- [ ] The PR is verified merged.
+- [ ] The parent item is not marked DONE while required children remain open.
+- [ ] No unresolved blockers remain.
 
-## Persist delivery evidence
+### Record evidence
 
-Record a meaningful checkpoint and final verification in an ordinary backlog comment when comment tools are available, preserving the description. Prefer one concise `### Agent checkpoint` for approach/progress, changed files, exact checks/results, verified branch/commit, blockers, and next action; avoid per-tool-call comments. If updating a short approach in the description, use the latest `expectedDescriptionRevision` when supported and reconcile conflicts. For substantial reports, save a CUSTOM draft document and reference its title from the item. Do not create a report document on every retry.
-
-For local-only work without account access, persist evidence in the workspace with `notchlet verify <change> --record` (or `notchlet evidence record`), scoping with `--check`, `--requirement`, and `--task` as needed: only executed checks and their declared or explicit links are claimed. For visual acceptance criteria, add `--capture-url <url>` or `--attach <path>` so recorded evidence carries the screenshot, DOM, or file. Confirm `notchlet status <change>` shows current verification; stale, failed, `unknown`, and missing evidence are unresolved blockers, and `notchlet evidence list --change <change>` shows linked IDs, freshness reasons, and recovery commands. Run any printed recovery command deliberately — it is never executed automatically. Task completion warns when no current passed evidence references the task; use `notchlet task complete <task> --change <change> --require-evidence` when delivery policy requires a hard block. Do not claim a remote backlog update occurred when only local evidence was recorded.
+Add one `### Development evidence` comment to the backlog item:
 
 ```markdown
 ## Development evidence — <date>
+- Backlog item: <key and title>
 - Scope delivered: <behavior>
 - Changed components: <paths>
 - Verification: <exact commands, working directories, outcomes>
 - Acceptance criteria: <met / remaining, with evidence>
-- Git evidence: <actual commit/PR URL if available>
+- Git evidence: <actual commit SHA and PR URL>
 - Blockers or follow-up: <facts, or none>
 - Resulting status: <status and reason>
 ```
 
-Do not publish credentials, personal payloads, or raw production data in reports.
+Do not publish credentials, personal payloads, or raw production data.
 
-## Synchronize
+### Update status and sync
 
-- Update the selected backlog item's status and confirm the returned state.
-- Do not complete a parent while required child items remain open; verify linked ticket synchronization rather than blindly forcing a ticket status.
-- Change a linked ticket only if the requested scope includes it and the ticket's resolution criteria are satisfied. Ticket `RESOLVED` is distinct from `CLOSED`; do not auto-close during coding.
-- Create/link/sync remote issues only when authorized. Verify the remote result. Report partial failures without claiming all systems were updated.
-- Do not invent comments, assignment, dependencies, or PR-management tools that are absent from the live schema.
-- End with a self-contained summary of changes, verification, Notchlet status, and unresolved work.
+- Connected: set the item to `DONE` and confirm the returned state.
+- Local: record local evidence, run `notchlet change close <change> --preview`, and close when eligible; report remote `DONE` as `sync pending`.
+- Sync the Git issue when authorized. Ticket `RESOLVED` is distinct from `CLOSED`; do not auto-close during delivery.
+- Report partial failures without claiming all systems were updated.
 
-## Post-delivery monitoring
+**Mode behavior:** connected — remote evidence, `DONE`, and issue sync. Local — local evidence and local closure; remote status and issue sync remain `sync pending` until connectivity returns, then run `notchlet sync status` and sync when authorized.
 
-- Watch for build failures, test failures, or production errors linked to the delivered item for a reasonable period after delivery.
-- If the delivered item causes a regression, report it immediately and use `notchlet-implement` to create a follow-up fix item.
-- Do not assume delivery is permanent success; verify the change behaves as expected in the target environment.
+## Rollback and regression handling
 
-## Rollback procedure (if delivery breaks production)
+- Do not mark DONE if delivery causes a regression.
+- Report the regression immediately, create a follow-up item via `notchlet-plan`, and set the affected item back to `IN_PROGRESS` or `IN_REVIEW`.
+- Watch builds, tests, and production errors for a reasonable period after delivery.
 
-- Do not mark the item `DONE` if it causes a regression.
-- Create a follow-up backlog item for the fix via `notchlet-plan`.
-- Set the affected item back to `IN_PROGRESS` or `IN_REVIEW` as appropriate.
-- Document the regression evidence in a backlog comment.
+## CLI tracking layer (required when available)
 
-## When to use
+The CLI holds the final verification and evidence record:
 
-- Final step after `notchlet-implement` and `notchlet-review`.
-- Recording evidence, updating status, and synchronizing Git issues/tickets.
-- When work is ready to be considered complete.
+- `notchlet verify <change> --record` and `notchlet evidence list --change <change>`.
+- Connected: `notchlet change close <change> --preview`, then `notchlet sync push --change <change>` when authorized.
+- Local: `notchlet change close <change> --preview` and close when eligible; sync later.
+- `notchlet checkpoint --change <id> --name <name>` for a synchronized checkpoint; it is not delivery evidence by itself.
+
+Local closure, remote delivery, PR merge, and deployment are separate outcomes. Do not claim a remote backlog update occurred when only local evidence was recorded. Full command reference: `notchlet-super`.
 
 ## When NOT to use
 
-- When you only need to plan tasks — use `notchlet-plan` instead.
-- When you only need to implement code — use `notchlet-implement` instead.
-- When you only need to review — use `notchlet-review` instead.
-- When you need to set up the MCP connection first — use `notchlet-mcp` instead.
+- To plan — use `notchlet-plan`.
+- To implement or fix code — use `notchlet-implement`.
+- To review only — use `notchlet-review`.
+- To set up the MCP connection — use `notchlet-mcp`.
 
 ## Related skills
 
-- `notchlet-implement` — implements work before delivery
-- `notchlet-review` — reviews implementation before delivery
-- `notchlet-platform` — resolves backlog items and reads context for delivery
-- `notchlet-super` — orchestrates the full cycle including delivery
+- `notchlet-implement` — implements the changes and pushes the branch
+- `notchlet-review` — reviews the PR against the backlog description
+- `notchlet-platform` — reads the backlog item and context for delivery
+- `notchlet-super` — orchestrates the full cycle and holds the CLI command reference

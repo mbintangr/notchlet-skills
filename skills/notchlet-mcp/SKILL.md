@@ -7,10 +7,29 @@ description: Set up or diagnose an authenticated Notchlet MCP connection for Ope
 
 Reuse an authenticated Notchlet MCP server already available to the agent. Do not request or create another credential just to repeat setup. The account session used by the Notchlet CLI for management is distinct from any MCP client credential; never copy either credential into project config, a prompt, shell history, or repository files.
 
+## Capability modes (decide first)
+
+Determine the mode before any Notchlet work, and use the same mode for the whole session unless connectivity changes:
+
+| Mode | How to detect | Authority for requirements/status | Primary tracking |
+|------|---------------|-----------------------------------|------------------|
+| **Connected** | Authenticated MCP initializes and advertises `tools/list`, or `notchlet doctor` reports an account/workspace binding | Notchlet platform | CLI local change/task/verify/evidence, linked to the backlog |
+| **Local** | No account/platform MCP, but the CLI or offline server is available (`notchlet init --local --client opencode`, `notchlet doctor`) | Local change model | CLI local change/task/verify/evidence |
+| **Neither** | No MCP and no CLI | Repository only | None; report the blocker |
+
+Rules:
+
+- Prefer **connected** whenever it is available. Do not silently fall back to local just because local always works.
+- In connected mode, platform steps are required (read/create/update backlog items, link Git issues, change status, mark `DONE`) and the CLI mirrors them locally.
+- In local mode, run the full CLI workflow and defer platform-only steps (platform backlog creation, Notchlet issue linking, remote status) as `sync pending`.
+- Never present local evidence, local closure, or a local status as a remote update.
+- When connectivity returns, run `notchlet sync status --change <change>`, resolve divergence, push only when authorized, then record remote evidence and status.
+- In neither mode, do repository-only work and report that tracking is unavailable.
+
 ## Setup
 
 1. Inspect the current client setup and discover the live Notchlet MCP capabilities/tools first. Do not overwrite existing configuration or assume a server URL, token, scope, or tool name.
-2. If authenticated Notchlet tools are already available, call the advertised tools and skip setup.
+2. Choose the capability mode (see above). If authenticated Notchlet tools are already available, use connected mode and skip setup.
 3. Choose the transport that matches the work:
    - **Offline/local (no account):** `notchlet init --local --client opencode` (or `claude`) installs skills and writes `{"type":"local","command":["notchlet","mcp","serve","--local"]}`. Agents get local authoring, task, verify, and evidence tools without network access.
    - **Connected stdio bridge (default):** `notchlet init --interactive`, or `notchlet mcp configure --client opencode` after login. Writes a bridge entry; the credential stays in the OS credential store.
@@ -23,6 +42,7 @@ Reuse an authenticated Notchlet MCP server already available to the agent. Do no
 ## CLI / MCP handoff
 
 - MCP is for authenticated remote discovery, bounded context, and authorized platform operations. Use only tool names and argument schemas actually advertised by the connected server. A local server advertises `notchlet_*` tools for changes, tasks, verify, and evidence.
+- The CLI is the primary local tracking layer in both modes: it holds the executable plan, task progress, verification, and evidence. In connected mode it stays linked to the platform backlog through import/sync; in local mode it is the only tracking store until sync is possible.
 - The CLI is for workspace setup, local change/task authoring, and authenticated platform workflows:
   - `notchlet change new <name> --quick`
   - `notchlet change update <change> --intent <text> --outcome <text> --capability-impact none --capability-rationale <text>`
@@ -38,6 +58,8 @@ Reuse an authenticated Notchlet MCP server already available to the agent. Do no
   - `notchlet status <change>`, `notchlet validate <change>`, `notchlet instructions <change> --action <plan|revise|implement|verify|resume>`
 - Prefer these commands over hand-editing `tasks.json`; they enforce references, revisions, and lifecycle ordering.
 - For backlog-to-local handoff, resolve the item over MCP, then use `notchlet backlog import <key-or-title>` from the initialized, correctly bound workspace when a local change is needed. Check CLI help and returned state; do not guess identifiers, create duplicate changes, or claim the import succeeded without confirmation.
+- Git issue tools (`notchlet_git_issue_create`, `notchlet_git_issue_link`, `notchlet_git_issue_sync`, `notchlet_git_issues_list`) belong to the implementation and delivery phases: create/link the issue before branching, and sync it only when authorized.
+- The end-to-end CLI command reference (change/task/verify/evidence/close/sync) lives in `notchlet-super`; keep this skill focused on connection setup and diagnostics.
 - Never verify MCP with unauthenticated `GET /mcp`. Do not probe endpoints directly; use authenticated client initialization and `tools/list`.
 
 ## Troubleshooting
@@ -56,4 +78,4 @@ Reuse an authenticated Notchlet MCP server already available to the agent. Do no
 ## Related skills
 
 - `notchlet-platform` — discover products and resolve existing backlog items
-- `notchlet-super` — route the complete workflow and hand off between MCP and CLI
+- `notchlet-super` — orchestrate the full cycle and hold the CLI command reference
